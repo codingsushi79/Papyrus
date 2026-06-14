@@ -1,4 +1,4 @@
-# Papyrus by SushiMC
+# Papyrus
 
 Papyrus is a Minecraft server software fork of [Paper](https://github.com/PaperMC/Paper). It keeps full compatibility with the Paper plugin ecosystem (`io.papermc.paper` API, Paper plugins, and existing configs) while adding first-class options for vanilla parity and performance tuning.
 
@@ -37,7 +37,6 @@ Paper optimizes Minecraft in ways that sometimes diverge from vanilla behavior. 
 | Entity RNG | Shared random source across all entities (faster) | Configurable: `SHARED` or `VANILLA` per-entity RNG |
 | Redstone | Vanilla by default; optional fast engines | Same engines, documented presets for vanilla vs tech servers |
 | Performance defaults | Paper defaults | Tuned defaults for chunk I/O, explosions, hoppers, idle worlds, and more |
-| Branding | Paper / PaperMC | **Papyrus by SushiMC** |
 | Update checker | Checks PaperMC | Disabled by default (fork-specific builds) |
 
 Everything else — Moonrise chunk system, incremental saves, hopper optimizations, plugin API, and the patch-based build — comes from upstream Paper unchanged.
@@ -102,16 +101,6 @@ spigot.yml                  # Spigot settings (activation ranges, etc.)
 bukkit.yml
 server.properties
 ```
-
-### 3. Verify branding
-
-On startup you should see:
-
-```
-Loading Papyrus <version> for Minecraft 26.1.2
-```
-
-The `/version` command reports **Papyrus** as the server brand.
 
 ---
 
@@ -393,7 +382,7 @@ Papyrus/
 └── .github/workflows/  CI build and test publishing
 ```
 
-Maven coordinates remain `io.papermc.paper` for plugin compatibility. The display brand is **Papyrus** (`sushimc:papyrus`).
+Maven coordinates remain `io.papermc.paper` for plugin compatibility.
 
 ---
 
@@ -435,8 +424,6 @@ java {
 
 Check `apiVersion` in `gradle.properties` for the current API version string to use in `paper-plugin.yml`.
 
-Plugins that check `ServerBuildInfo.brandId()` for `papermc:paper` will still work — Papyrus reports `sushimc:papyrus`. Use `ServerBuildInfo.isBrandCompatible()` or avoid hard-coded brand checks when possible.
-
 ---
 
 ## Continuous integration
@@ -476,13 +463,10 @@ Papyrus inherits licensing from Paper, Spigot, and CraftBukkit. See [LICENSE.md]
 
 - [Paper](https://github.com/PaperMC/Paper) by [PaperMC](https://papermc.io) — upstream server software
 - [Spigot](https://www.spigotmc.org/) / [CraftBukkit](https://bukkit.org/) — original Bukkit implementation
-- **SushiMC** — Papyrus fork, configurability, and performance defaults
 
 ---
 
 ## FAQ
-
-Plugins that check `ServerBuildInfo.isBrandCompatible()` with `papermc:paper` are supported — Papyrus reports compatibility with the Paper brand ID.
 
 **Is Papyrus compatible with Paper plugins?**  
 Yes. Same API package (`io.papermc.paper`), same Maven artifact (`io.papermc.paper:paper-api`), same config file names, same `paper-plugin.yml` format. The Gradle module folders are named `papyrus-*`, but published API coordinates remain `paper-api`.
@@ -497,7 +481,7 @@ Set `performance.entity-random-source: VANILLA` in `config/paper-global.yml` and
 Set `misc.redstone-implementation: VANILLA` in your world config. This is already the default.
 
 **Why is the jar named `papyrus-paperclip`?**  
-The bootstrap tool (`paperclip`) comes from upstream Paper. Papyrus renames the output jar; the server still identifies itself as Papyrus at runtime.
+The bootstrap tool (`paperclip`) comes from upstream Paper. Papyrus copies the build output to `papyrus-paperclip-*.jar`.
 
 **Where do I report bugs?**  
 Open an issue at [github.com/codingsushi79/Papyrus/issues](https://github.com/codingsushi79/Papyrus/issues). Specify whether the bug exists in upstream Paper or is Papyrus-specific.
