@@ -4,6 +4,8 @@ Papyrus is a Minecraft server software fork of [Paper](https://github.com/PaperM
 
 Repository: [github.com/codingsushi79/Papyrus](https://github.com/codingsushi79/Papyrus)
 
+Documentation: [docs.sushii.dev/papyrus](https://docs.sushii.dev/papyrus/)
+
 ---
 
 ## Table of contents
@@ -36,7 +38,8 @@ Paper optimizes Minecraft in ways that sometimes diverge from vanilla behavior. 
 |------|----------------|----------------|
 | Entity RNG | Shared random source across all entities (faster) | Configurable: `SHARED` or `VANILLA` per-entity RNG |
 | Redstone | Vanilla by default; optional fast engines | Same engines, documented presets for vanilla vs tech servers |
-| Performance defaults | Paper defaults | Tuned defaults for chunk I/O, explosions, hoppers, idle worlds, and more |
+| Experience orbs | Paper defaults | Configurable despawn, pickup radius, merge radius, and merge disable |
+| Performance defaults | Paper defaults | Tuned defaults for chunk I/O, explosions, hoppers, idle worlds, JVM/Netty |
 | Update checker | Checks PaperMC | Disabled by default (fork-specific builds) |
 
 Everything else — Moonrise chunk system, incremental saves, hopper optimizations, plugin API, and the patch-based build — comes from upstream Paper unchanged.
@@ -64,6 +67,8 @@ Current Minecraft version: **26.1.2** (see `gradle.properties`).
 ## Quick start
 
 ### 1. Get the jar
+
+**From releases:** Download `Papyrus-<mcVersion>.jar` (e.g. `Papyrus-26.1.2.jar`) from [GitHub Releases](https://github.com/codingsushi79/Papyrus/releases) or see [Documentation → Download](https://docs.sushii.dev/papyrus/).
 
 **From CI:** Download the `papyrus-server` artifact from the latest successful [GitHub Actions](https://github.com/codingsushi79/Papyrus/actions) build.
 
@@ -170,7 +175,7 @@ Papyrus uses Paper's layered config system. Files are YAML; keys use kebab-case.
 
 After editing configs, restart the server or use `/paper reload` where supported (some settings require a full restart).
 
-For the full Paper config reference, see [docs.papermc.io](https://docs.papermc.io/paper/reference/configuration/). The sections below cover **Papyrus-specific** behavior and recommended values.
+For Papyrus-specific options and presets, see [docs.sushii.dev/papyrus](https://docs.sushii.dev/papyrus/). For the full Paper config reference, see [docs.papermc.io](https://docs.papermc.io/paper/reference/configuration/). The sections below cover **Papyrus-specific** behavior and recommended values.
 
 ---
 
@@ -183,6 +188,8 @@ For the full Paper config reference, see [docs.papermc.io](https://docs.papermc.
 ```yaml
 performance:
   entity-random-source: SHARED   # or VANILLA
+  apply-runtime-jvm-defaults: true # Netty buffer caps, JNA nosys
+  netty-threads: -1                # -1 = auto (4–8 based on CPU)
 ```
 
 | Value | Behavior | Use when |
@@ -190,7 +197,23 @@ performance:
 | `SHARED` | All entities share one random source (Paper default, faster) | Performance matters; enchantment seed manipulation is not needed |
 | `VANILLA` | Each entity gets `RandomSource.create()` like vanilla | Speedrunners, enchantment seed manipulation, or any vanilla-like RNG dependency |
 
-This is the main Papyrus addition for RNG control. Paper's shared RNG breaks predictability that vanilla players rely on for enchantment table seed cycling.
+### Experience orbs
+
+**File:** `config/paper-world-defaults.yml` or `<world>/paper-world.yml`
+
+```yaml
+environment:
+  experience-orb-despawn-rate: 6000   # ticks (vanilla: 6000)
+  experience-orb-pickup-radius: 8.0   # blocks (vanilla: 8)
+
+entities:
+  spawning:
+    experience-orb-merge-radius: 1.0    # merge search radius in blocks
+  behavior:
+    disable-experience-orb-merge: false
+```
+
+Lower `experience-orb-pickup-radius` to reduce orb lag on grinder servers. Set `disable-experience-orb-merge: true` if you want orbs to stay separate.
 
 ### Redstone implementation
 
@@ -236,6 +259,8 @@ These defaults apply to **new** config files. Existing servers keep their saved 
 |-----|-----------------|--------|
 | `chunk-system.io-threads` | auto | Scales chunk load/save throughput with CPU |
 | `performance.entity-random-source` | `SHARED` | Fast entity RNG |
+| `performance.apply-runtime-jvm-defaults` | `true` | Sets Netty buffer caps and `jna.nosys` at startup |
+| `performance.netty-threads` | `-1` (auto) | Scales Netty event-loop threads (4–8) when not set in `spigot.yml` |
 | `spark.enabled` | `false` | No Spark profiler overhead |
 | `misc.region-file-cache-size` | `512` | Larger region file cache (uses more RAM) |
 | `update-checker.enabled` | `false` | No PaperMC update checks |
@@ -246,6 +271,10 @@ These defaults apply to **new** config files. Existing servers keep their saved 
 |-----|-----------------|--------|
 | `misc.update-pathfinding-on-block-update` | `false` | Mobs don't repath on every nearby block change |
 | `environment.optimize-explosions` | `true` | Faster TNT/creeper blast processing |
+| `environment.experience-orb-despawn-rate` | `6000` | Ticks until XP orbs despawn (vanilla: 6000) |
+| `environment.experience-orb-pickup-radius` | `8.0` | Player pickup range in blocks |
+| `entities.spawning.experience-orb-merge-radius` | `1.0` | Radius for orb merge search |
+| `entities.behavior.disable-experience-orb-merge` | `false` | When true, orbs never merge |
 | `unsupported-settings.disable-world-ticking-when-empty` | `true` | Worlds with no players stop ticking |
 | `hopper.ignore-occluding-blocks` | `true` | Hoppers skip entity scans under solid blocks |
 | `entities.armor-stands.tick` | `false` | Armor stands don't tick (display/map servers) |
@@ -345,8 +374,8 @@ cd Papyrus
 # Apply Minecraft patches and compile
 ./gradlew applyPatches build
 
-# Create the runnable paperclip jar
-./gradlew createPaperclipJar
+# Create the runnable paperclip jar (copied to papyrus-paperclip-*.jar)
+./gradlew createPaperclipJar syncPapyrusPaperclipJar
 ```
 
 Common Gradle tasks:
@@ -356,6 +385,7 @@ Common Gradle tasks:
 | `./gradlew applyPatches` | Apply all Minecraft source patches |
 | `./gradlew build` | Compile and run tests |
 | `./gradlew createPaperclipJar` | Build the downloadable server jar |
+| `./gradlew syncPapyrusPaperclipJar` | Copy paperclip output to `papyrus-paperclip-*.jar` |
 | `./gradlew rebuildPatches` | Regenerate patch files after editing `papyrus-server/src/minecraft` |
 | `./gradlew fixupSourcePatches` | Fix patch context after manual edits |
 
@@ -371,24 +401,29 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for patch workflow details (inherited fro
 
 ```
 Papyrus/
-├── papyrus-api/          Public Bukkit/Paper plugin API (published as paper-api)
-├── papyrus-server/       Server implementation
-│   ├── patches/        Minecraft source patches (sources/, features/, resources/)
-│   └── src/main/java/  Papyrus/Paper Java code (io.papermc.paper.*)
-├── build-data/         Access wideners and mapping data
+├── papyrus-api/          Public Bukkit/Paper plugin API (Gradle project :paper-api)
+├── papyrus-server/       Server implementation (Gradle project :paper-server)
+├── paper-server/         Symlink → papyrus-server (required by Paperweight patch tooling)
+│   ├── patches/          Minecraft source patches (sources/, features/, resources/)
+│   └── src/main/java/    Papyrus/Paper Java code (io.papermc.paper.*)
+├── build-data/           Access wideners and mapping data
 ├── scripts/
-│   └── start.sh        Production JVM start script
-├── gradle.properties   MC version, Maven group, Gradle tuning
-└── .github/workflows/  CI build and test publishing
+│   └── start.sh          Production JVM start script
+├── gradle.properties     MC version, apiVersion, Maven group
+└── .github/workflows/    CI build, tests, and release uploads
 ```
 
-Maven coordinates remain `io.papermc.paper` for plugin compatibility.
+Gradle project names stay `:paper-api` and `:paper-server` so upstream Paperweight and plugin examples keep working. Physical directories use the `papyrus-*` prefix.
+
+Maven coordinates remain `io.papermc.paper:paper-api` for plugin compatibility. The API jar embeds `apiVersioning.json` (from `apiVersion` in `gradle.properties`) for runtime version checks.
 
 ---
 
 ## Plugin development
 
-Papyrus is API-compatible with Paper plugins. Use the same dependency:
+Papyrus is API-compatible with Paper plugins. Use the same dependency and plugin metadata format.
+
+### Dependencies
 
 **Gradle (Kotlin DSL):**
 
@@ -422,7 +457,45 @@ java {
 </dependency>
 ```
 
-Check `apiVersion` in `gradle.properties` for the current API version string to use in `paper-plugin.yml`.
+Replace the version with the current `apiVersion` from [`gradle.properties`](gradle.properties). Papyrus does not publish its own Maven repository; the API matches Paper's published artifact.
+
+### `paper-plugin.yml`
+
+```yaml
+name: MyPlugin
+version: 1.0.0
+main: com.example.myplugin.MyPlugin
+api-version: '26.1.2'   # must match gradle.properties apiVersion
+```
+
+Use `api-version` matching `gradle.properties`. Paper plugins use `paper-plugin.yml`; legacy Bukkit plugins use `plugin.yml` instead.
+
+### Detecting Papyrus at runtime
+
+```java
+import io.papermc.paper.ServerBuildInfo;
+import net.kyori.adventure.key.Key;
+
+ServerBuildInfo info = ServerBuildInfo.buildInfo();
+if (info.brandId().equals(ServerBuildInfo.BRAND_PAPYRUS_ID)) {
+    // Running on Papyrus (sushimc:papyrus)
+}
+if (info.isBrandCompatible(ServerBuildInfo.BRAND_PAPER_ID)) {
+    // true on both Paper and Papyrus — use for generic Paper-targeted plugins
+}
+```
+
+### Local development against this repo
+
+```kotlin
+dependencies {
+    compileOnly(project(":paper-api"))
+}
+```
+
+Run `./gradlew publishToMavenLocal` to install `paper-api` locally, then add `mavenLocal()` above the PaperMC repository in your plugin project. See [CONTRIBUTING.md](CONTRIBUTING.md#using-the-test-plugin) for running the included `test-plugin` module.
+
+More plugin guides: [docs.sushii.dev/papyrus](https://docs.sushii.dev/papyrus/) and [docs.papermc.io/paper/dev](https://docs.papermc.io/paper/dev/).
 
 ---
 
@@ -433,9 +506,11 @@ GitHub Actions builds on every push and pull request to `main`:
 1. Apply Minecraft patches
 2. Compile and run tests
 3. Build the paperclip jar
-4. Upload artifacts (`papyrus-server` jar + test results)
+4. Upload CI artifacts (`papyrus-server` jar + test results)
 
-No external secrets are required. Download builds from the Actions tab on [github.com/codingsushi79/Papyrus](https://github.com/codingsushi79/Papyrus/actions).
+**Releases:** Pushing a version tag (e.g. `v1.0.1`) creates a [GitHub Release](https://github.com/codingsushi79/Papyrus/releases) with `Papyrus-<mcVersion>.jar` attached automatically. No external secrets are required.
+
+Download CI builds from the Actions tab on [github.com/codingsushi79/Papyrus](https://github.com/codingsushi79/Papyrus/actions).
 
 ---
 
@@ -469,7 +544,10 @@ Papyrus inherits licensing from Paper, Spigot, and CraftBukkit. See [LICENSE.md]
 ## FAQ
 
 **Is Papyrus compatible with Paper plugins?**  
-Yes. Same API package (`io.papermc.paper`), same Maven artifact (`io.papermc.paper:paper-api`), same config file names, same `paper-plugin.yml` format. The Gradle module folders are named `papyrus-*`, but published API coordinates remain `paper-api`.
+Yes. Same API package (`io.papermc.paper`), same Maven artifact (`io.papermc.paper:paper-api`), same config file names, same `paper-plugin.yml` format. Gradle modules are named `:paper-api` / `:paper-server` but live in `papyrus-*` directories. Use `ServerBuildInfo.BRAND_PAPYRUS_ID` only if you need Papyrus-specific behavior.
+
+**What's the difference between `performance.netty-threads` and `spigot.yml` Netty settings?**  
+`performance.netty-threads` in `paper-global.yml` sets `io.netty.eventLoopThreads` when `spigot.yml` does not override Netty thread count. Set either one, not both, unless you know you need different values.
 
 **Will my existing Paper config work?**  
 Yes. Drop in your existing `config/`, `spigot.yml`, and worlds. Papyrus-specific defaults only apply to keys that aren't already set.

@@ -173,7 +173,9 @@ tasks.jar {
     from(generateApiVersioningFile.flatMap { it.outputFile })
     manifest {
         attributes(
-            "Automatic-Module-Name" to "org.bukkit"
+            "Automatic-Module-Name" to "org.bukkit",
+            "Implementation-Title" to "Papyrus API (paper-api)",
+            "Implementation-Vendor" to "SushiMC",
         )
     }
 }

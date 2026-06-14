@@ -59,11 +59,13 @@
          this.setPos(pos);
          if (!level.isClientSide()) {
              this.setYRot(this.random.nextFloat() * 360.0F);
-@@ -146,12 +_,13 @@
+@@ -145,15 +_,16 @@
+             }
  
              this.age++;
-             if (this.age >= 6000) {
+-            if (this.age >= 6000) {
 -                this.discard();
++            if (this.age >= level().paperConfig().environment.experienceOrbDespawnRate) { // Papyrus - configurable orb despawn rate
 +                this.discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause
              }
          }
@@ -72,8 +74,11 @@
      private void followNearbyPlayer() {
 +        Player prevTarget = this.followingPlayer; // CraftBukkit - store old target
          if (this.followingPlayer == null || this.followingPlayer.isSpectator() || this.followingPlayer.distanceToSqr(this) > 64.0) {
-             Player nearestPlayer = this.level().getNearestPlayer(this, 8.0);
+-            Player nearestPlayer = this.level().getNearestPlayer(this, 8.0);
++            Player nearestPlayer = this.level().getNearestPlayer(this, this.level().paperConfig().environment.experienceOrbPickupRadius); // Papyrus - configurable pickup radius
              if (nearestPlayer != null && !nearestPlayer.isSpectator() && !nearestPlayer.isDeadOrDying()) {
+                 this.followingPlayer = nearestPlayer;
+             } else {
 @@ -161,7 +_,24 @@
              }
          }
@@ -100,7 +105,7 @@
              Vec3 delta = new Vec3(
                  this.followingPlayer.getX() - this.getX(),
                  this.followingPlayer.getY() + this.followingPlayer.getEyeHeight() / 2.0 - this.getY(),
-@@ -191,18 +_,24 @@
+@@ -191,18 +_,28 @@
      }
  
      public static void awardWithDirection(final ServerLevel level, final Vec3 pos, final Vec3 roughDirection, int amount) {
@@ -120,9 +125,14 @@
      }
  
      private static boolean tryMergeToExisting(final ServerLevel level, final Vec3 pos, final int value) {
-+        // Paper - TODO some other event for this kind of merge
-         AABB box = AABB.ofSize(pos, 1.0, 1.0, 1.0);
+-        AABB box = AABB.ofSize(pos, 1.0, 1.0, 1.0);
 -        int id = level.getRandom().nextInt(40);
++        if (level.paperConfig().entities.behavior.disableExperienceOrbMerge) { // Papyrus - optional orb merge disable
++            return false;
++        }
++        // Paper - TODO some other event for this kind of merge
++        final double mergeRadius = level.paperConfig().entities.spawning.experienceOrbMergeRadius; // Papyrus - configurable merge radius
++        AABB box = AABB.ofSize(pos, mergeRadius, mergeRadius, mergeRadius);
 +        int id = level.getRandom().nextInt(io.papermc.paper.configuration.GlobalConfiguration.get().misc.xpOrbGroupsPerArea.or(ORB_GROUPS_PER_AREA)); // Paper - Configure how many orb groups per area
          List<ExperienceOrb> orbs = level.getEntities(EntityTypeTest.forClass(ExperienceOrb.class), box, orbx -> canMerge(orbx, id, value));
          if (!orbs.isEmpty()) {

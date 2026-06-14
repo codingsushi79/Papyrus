@@ -1,8 +1,8 @@
-name: Paper-Test-Plugin
+name: Papyrus-Test-Plugin
 version: ${version}
 main: io.papermc.testplugin.TestPlugin
-description: Paper Test Plugin
-author: PaperMC
+description: Papyrus test plugin for API development
+author: SushiMC
 api-version: ${apiversion}
 load: STARTUP
 bootstrapper: io.papermc.testplugin.TestPluginBootstrap

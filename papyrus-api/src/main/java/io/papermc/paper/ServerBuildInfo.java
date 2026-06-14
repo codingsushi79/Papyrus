@@ -41,14 +41,17 @@ public interface ServerBuildInfo {
     /**
      * Gets the brand id of the server.
      *
-     * @return the brand id of the server (e.g. "papermc:paper")
+     * @return the brand id of the server (e.g. {@code papermc:paper} on Paper, {@code sushimc:papyrus} on Papyrus)
      */
     Key brandId();
 
     /**
      * Checks if the current server supports the specified brand.
+     * <p>
+     * On Papyrus, {@link #BRAND_PAPER_ID} is always considered compatible so Paper-targeted plugins
+     * can run without a separate build.
      *
-     * @param brandId the brand to check (e.g. "papermc:folia")
+     * @param brandId the brand to check (e.g. {@code papermc:paper}, {@code sushimc:papyrus})
      * @return {@code true} if the server supports the specified brand
      */
     @ApiStatus.Experimental
@@ -57,7 +60,7 @@ public interface ServerBuildInfo {
     /**
      * Gets the brand name of the server.
      *
-     * @return the brand name of the server (e.g. "Paper")
+     * @return the brand name of the server (e.g. "Paper", "Papyrus")
      */
     String brandName();
 

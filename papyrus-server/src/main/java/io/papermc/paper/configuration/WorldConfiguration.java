@@ -70,7 +70,7 @@ import org.spongepowered.configurate.serialize.SerializationException;
 @SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
 public class WorldConfiguration extends ConfigurationPart {
     private static final Logger LOGGER = LogUtils.getClassLogger();
-    static final int CURRENT_VERSION = 31; // (when you change the version, change the comment, so it conflicts on rebases): migrate spawn loaded configs to gamerule
+    static final int CURRENT_VERSION = 32; // (when you change the version, change the comment, so it conflicts on rebases): experience orb tuning options
 
     private final transient SpigotWorldConfig spigotConfig;
     private final transient Identifier worldKey;
@@ -246,6 +246,8 @@ public class WorldConfiguration extends ConfigurationPart {
             }
 
             public boolean allChunksAreSlimeChunks = false;
+            @Comment("Search radius in blocks when merging nearby experience orbs.")
+            public double experienceOrbMergeRadius = 1.0;
             @BelowZeroToEmpty
             public DoubleOr.Default skeletonHorseThunderSpawnChance = DoubleOr.Default.USE_DEFAULT;
             public boolean ironGolemsCanSpawnInAir = false;
@@ -331,6 +333,9 @@ public class WorldConfiguration extends ConfigurationPart {
                 }
             }
 
+            @Comment("When true, experience orbs will not merge with each other.")
+            public boolean disableExperienceOrbMerge = false;
+
             @Comment("Adds a cooldown to bees being released after a failed release, which can occur if the hive is blocked or it being night.")
             public boolean cooldownFailedBeehiveReleases = true;
             @Comment("The delay before retrying POI acquisition when entity navigation is stuck. This will reduce pathfinding performance impact. Measured in ticks.")
@@ -389,7 +394,9 @@ public class WorldConfiguration extends ConfigurationPart {
     public MaxGrowthHeight maxGrowthHeight;
 
     public class MaxGrowthHeight extends ConfigurationPart {
+        @Comment("Maximum height cactus can grow. Vanilla default is 3.")
         public int cactus = 3;
+        @Comment("Maximum height sugar cane can grow. Vanilla default is 3.")
         public int reeds = 3;
         public Bamboo bamboo;
 
@@ -446,6 +453,10 @@ public class WorldConfiguration extends ConfigurationPart {
         public int maxFluidTicks = 65536;
         public int maxBlockTicks = 65536;
         public boolean locateStructuresOutsideWorldBorder = false;
+        @Comment("Ticks before experience orbs despawn. Vanilla default is 6000 (5 minutes).")
+        public int experienceOrbDespawnRate = 6000;
+        @Comment("Maximum distance in blocks for experience orbs to detect and move toward players.")
+        public double experienceOrbPickupRadius = 8.0;
     }
 
     public Spawn spawn;
@@ -485,13 +496,13 @@ public class WorldConfiguration extends ConfigurationPart {
         }
     }
 
-    public Hopper hopper;
+        public Hopper hopper;
 
-    public class Hopper extends ConfigurationPart {
-        public boolean cooldownWhenFull = true;
-        public boolean disableMoveEvent = false;
-        public boolean ignoreOccludingBlocks = true;
-    }
+        public class Hopper extends ConfigurationPart {
+            public boolean cooldownWhenFull = true;
+            public boolean disableMoveEvent = false;
+            public boolean ignoreOccludingBlocks = true;
+        }
 
     public Collisions collisions;
 

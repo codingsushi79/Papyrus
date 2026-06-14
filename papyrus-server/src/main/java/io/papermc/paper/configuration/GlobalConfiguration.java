@@ -29,7 +29,7 @@ import java.util.Set;
 @SuppressWarnings({"CanBeFinal", "FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
 public class GlobalConfiguration extends ConfigurationPart {
     private static final Logger LOGGER = LogUtils.getLogger();
-    static final int CURRENT_VERSION = 32; // (when you change the version, change the comment, so it conflicts on rebases): entity random source configuration
+    static final int CURRENT_VERSION = 33; // (when you change the version, change the comment, so it conflicts on rebases): papyrus performance tuning options
     private static GlobalConfiguration instance;
     public static boolean isFirstStart = false;
     public static GlobalConfiguration get() {
@@ -407,6 +407,29 @@ public class GlobalConfiguration extends ConfigurationPart {
             "VANILLA: Each entity gets its own independent random source matching vanilla behavior. Slightly lower performance."
         )
         public EntityRandomSource entityRandomSource = EntityRandomSource.SHARED;
+
+        @Comment(
+            "Apply Papyrus JVM and network runtime defaults on startup (Netty buffer caps, JNA nosys).\n" +
+            "These are applied before configs load; disabling this only affects reloads after the first boot."
+        )
+        public boolean applyRuntimeJvmDefaults = true;
+
+        @Comment("Netty I/O event loop threads. Set to -1 to auto-detect from CPU count (min 4, max 8).")
+        public int nettyThreads = -1;
+
+        @PostProcess
+        private void postProcess() {
+            io.papermc.paper.util.PapyrusPerformance.applyRuntimeDefaults();
+            io.papermc.paper.util.EntityRandomSources.refresh();
+
+            final int threadCount;
+            if (this.nettyThreads >= 0) {
+                threadCount = this.nettyThreads;
+            } else {
+                threadCount = Math.min(8, Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
+            }
+            System.setProperty("io.netty.eventLoopThreads", Integer.toString(threadCount));
+        }
 
         public enum EntityRandomSource {
             SHARED,

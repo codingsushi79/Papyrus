@@ -173,7 +173,7 @@
  
      public Entity(final EntityType<?> type, final Level level) {
          this.type = type;
-@@ -320,6 +_,7 @@
+@@ -320,6 +_,8 @@
          this.entityData = entityDataBuilder.build();
          this.setPos(0.0, 0.0, 0.0);
          this.eyeHeight = this.dimensions.eyeHeight();

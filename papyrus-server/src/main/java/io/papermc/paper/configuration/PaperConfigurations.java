@@ -26,9 +26,11 @@ import io.papermc.paper.configuration.transformation.global.versioned.V29_LogIPs
 import io.papermc.paper.configuration.transformation.global.versioned.V30_PacketIds;
 import io.papermc.paper.configuration.transformation.global.versioned.V31_AllowNetherPropertiesToConfig;
 import io.papermc.paper.configuration.transformation.global.versioned.V32_EntityRandomSource;
+import io.papermc.paper.configuration.transformation.global.versioned.V33_PapyrusPerformanceOptions;
 import io.papermc.paper.configuration.transformation.world.FeatureSeedsGeneration;
 import io.papermc.paper.configuration.transformation.world.LegacyPaperWorldConfig;
 import io.papermc.paper.configuration.transformation.world.versioned.V29_ZeroWorldHeight;
+import io.papermc.paper.configuration.transformation.world.versioned.V32_ExperienceOrbOptions;
 import io.papermc.paper.configuration.transformation.world.versioned.V30_RenameFilterNbtFromSpawnEgg;
 import io.papermc.paper.configuration.type.BooleanOrDefault;
 import io.papermc.paper.configuration.type.DespawnRange;
@@ -99,27 +101,36 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
     private static final String BACKUP_DIR ="legacy-backup";
 
     private static final String GLOBAL_HEADER = String.format("""
-            This is the global configuration file for Papyrus by SushiMC.
+            This is the global configuration file for Papyrus.
             As you can see, there's a lot to configure. Some options may impact gameplay, so use
             with caution, and make sure you know what each option does before configuring.
 
             Papyrus is a Paper fork focused on configurability and vanilla compatibility options.
+            See https://docs.sushii.dev/papyrus/ for documentation.
+
+            Papyrus-specific global options live under the performance section (entity RNG,
+            JVM defaults, Netty threads).
 
             The world configuration options have been moved inside
             their respective world folder. The files are named %s""", WORLD_CONFIG_FILE_NAME);
 
     private static final String WORLD_DEFAULTS_HEADER = """
-            This is the world defaults configuration file for Papyrus by SushiMC.
+            This is the world defaults configuration file for Papyrus.
             As you can see, there's a lot to configure. Some options may impact gameplay, so use
             with caution, and make sure you know what each option does before configuring.
+
+            Papyrus adds world options for experience orbs, redstone engines, and performance
+            presets. See https://docs.sushii.dev/papyrus/ for documentation.
 
             Configuration options here apply to all worlds, unless you specify overrides inside
             the world-specific config file inside each world folder.""";
 
     private static final Function<ContextMap, String> WORLD_HEADER = map -> String.format("""
-        This is a world configuration file for Papyrus by SushiMC.
+        This is a world configuration file for Papyrus.
         This file may start empty but can be filled with settings to override ones in the %s/%s
-        
+
+        See https://docs.sushii.dev/papyrus/ for Papyrus-specific world options.
+
         World: %s""",
         PaperConfigurations.CONFIG_DIR,
         PaperConfigurations.WORLD_DEFAULTS_CONFIG_FILE_NAME,
@@ -130,8 +141,9 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
         The global and world default configuration files have moved to %s
         and the world-specific configuration file has been moved inside
         the respective world folder.
-        
-        See https://docs.papermc.io/paper/configuration for more information.
+
+        Papyrus documentation: https://docs.sushii.dev/papyrus/
+        Paper configuration reference: https://docs.papermc.io/paper/configuration
         """;
 
     @VisibleForTesting
@@ -267,6 +279,7 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
         final ConfigurationTransformation.VersionedBuilder versionedBuilder = Transformations.versionedBuilder();
         V29_ZeroWorldHeight.apply(versionedBuilder);
         V30_RenameFilterNbtFromSpawnEgg.apply(versionedBuilder);
+        V32_ExperienceOrbOptions.apply(versionedBuilder);
         // ADD FUTURE VERSIONED TRANSFORMS TO versionedBuilder HERE
         versionedBuilder.build().apply(node);
     }
@@ -284,6 +297,7 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
         V30_PacketIds.apply(versionedBuilder);
         V31_AllowNetherPropertiesToConfig.apply(versionedBuilder);
         V32_EntityRandomSource.apply(versionedBuilder);
+        V33_PapyrusPerformanceOptions.apply(versionedBuilder);
         // ADD FUTURE VERSIONED TRANSFORMS TO versionedBuilder HERE
         versionedBuilder.build().apply(node);
     }

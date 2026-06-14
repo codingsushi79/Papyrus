@@ -1,5 +1,5 @@
 <body>
-    <p>Bukkit, the plugin development framework.</p>
+    <p>Bukkit and Paper plugin development API, as implemented by Papyrus and Paper.</p>
 
     <p>
     The documentation is for developing plugins and is split into the
@@ -7,6 +7,11 @@
     cover running a server, contributing code back to the project, or setting
     up a workspace. Working knowledge of the Java language is a prerequisite
     for developing plugins.
+    </p><p>
+    Papyrus publishes this API under the same Maven coordinates as Paper
+    (<code>io.papermc.paper:paper-api</code>) for plugin compatibility. Use
+    {@link io.papermc.paper.ServerBuildInfo} to detect the running server brand
+    at runtime ({@code sushimc:papyrus} on Papyrus, {@code papermc:paper} on Paper).
     </p><p>
     For basic plugin development, see the {@link org.bukkit.plugin plugin
     package}. It covers the basic requirements of a plugin jar.

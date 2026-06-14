@@ -1,18 +1,13 @@
-Contributing to Paper
+Contributing to Papyrus
 ==========================
-PaperMC is happy you're willing to contribute to our projects. We are usually
-very lenient with all submitted PRs, but there are still some guidelines you
-can follow to make the approval process go more smoothly.
+
+Papyrus inherits Paper's patch-based workflow. We welcome PRs against [codingsushi79/Papyrus](https://github.com/codingsushi79/Papyrus).
+
+Documentation for Papyrus-specific configuration: [docs.sushii.dev/papyrus](https://docs.sushii.dev/papyrus/)
 
 ## Use a Personal Fork and not an Organization
 
-Paper will routinely modify your PR, whether it's a quick rebase or to take care
-of any minor nitpicks we might have. Often, it's better for us to solve these
-problems for you than make you go back and forth trying to fix them yourself.
-
-Unfortunately, if you use an organization for your PR, it prevents Paper from
-modifying it. To avoid this, please do not use repositories on organizations
-for PRs.
+Maintainers may modify your PR (rebase, minor fixes). Organization-owned forks block those edits — use a personal fork for pull requests.
 
 ## Requirements
 
@@ -23,7 +18,7 @@ you will most likely use this for WSL), `homebrew` (macOS / Linux), and more:
 - `git` (package `git` everywhere);
 - A Java 25 or later JDK (packages vary, use Google/DuckDuckGo/etc.).
   - [Adoptium](https://adoptium.net/) has builds for most operating systems.
-  - Paper requires JDK 25 to build, however, makes use of Gradle's
+  - Papyrus requires JDK 25 to build, however, makes use of Gradle's
     [Toolchains](https://docs.gradle.org/current/userguide/toolchains.html)
     feature to allow building with only JRE 21 or later installed. (Gradle will
     automatically provision JDK 25 for compilation if it cannot find an existing
@@ -428,24 +423,19 @@ int maxPlayers = level.paperConfig().misc.maxNumOfPlayers;
 ```
 
 #### Documentation
-When adding or removing a config option, you should open a pull request in our [documentation repository](https://github.com/PaperMC/docs)
-to keep it in sync and accurate. If you're unsure whether your original change will be accepted, then it's fine to wait with making the documentation
-pull request until a maintainer has reviewed your changes. Once everything is done, the documentation pull request will be merged at the same time
-that your original pull request is.
+When adding or removing a config option, document it in [docs.sushii.dev/papyrus](https://docs.sushii.dev/papyrus/) (Papyrus-specific options) and/or upstream [PaperMC/docs](https://github.com/PaperMC/docs) if the change applies to Paper as well. Bump the config version in `GlobalConfiguration` or `WorldConfiguration` and add a migration class under `configuration/versions/` when changing defaults or adding keys.
 
 ## Testing API changes
 
-### Using the Paper Test Plugin
+### Using the test plugin
 
-The Paper project has a `test-plugin` module for easily testing out API changes
-and additions. To use the test plugin, enable it in `test-plugin.settings.gradle.kts`,
-which will be generated after running Gradle at least once. After this, you can edit
-the test plugin, and run a server with the plugin using `./gradlew runDev` (or any
-of the other Paper run tasks).
+The repository includes a `test-plugin` module for testing API changes. Enable it in `test-plugin.settings.gradle.kts` (generated after the first Gradle run), then run `./gradlew runDev`.
+
+Gradle project names are `:paper-api` and `:paper-server`; source lives in `papyrus-api/` and `papyrus-server/`. A `paper-server` symlink points at `papyrus-server/` for Paperweight — do not remove it.
 
 ### Publishing to Maven local (use in external plugins)
 
-To build and install the Paper APIs and Server to your local Maven repository, do the following:
+To build and install the API to your local Maven repository (published as `io.papermc.paper:paper-api`):
 
 - Run `./gradlew publishToMavenLocal` in the base directory.
 

@@ -1,5 +1,7 @@
 package io.papermc.paper.util;
 
+import io.papermc.paper.configuration.GlobalConfiguration;
+
 /**
  * Applies safe runtime performance defaults before the server fully boots.
  */
@@ -9,6 +11,10 @@ public final class PapyrusPerformance {
     }
 
     public static void applyRuntimeDefaults() {
+        final GlobalConfiguration configuration = GlobalConfiguration.get();
+        if (configuration != null && !configuration.performance.applyRuntimeJvmDefaults) {
+            return;
+        }
         // Paper - cap per-thread NIO cache size; https://www.evanjones.ca/java-bytebuffer-leak.html
         if (System.getProperty("jdk.nio.maxCachedBufferSize") == null) {
             System.setProperty("jdk.nio.maxCachedBufferSize", "262144");

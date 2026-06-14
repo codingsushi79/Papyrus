@@ -61,6 +61,7 @@ public record ServerBuildInfoImpl(
 
     @Override
     public boolean isBrandCompatible(final @NotNull Key brandId) {
+        // Papyrus reports sushimc:papyrus but accepts papermc:paper for Paper-targeted plugins
         return brandId.equals(this.brandId) || brandId.equals(BRAND_PAPER_ID);
     }
 
