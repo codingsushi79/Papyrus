@@ -22,7 +22,7 @@ public class Main {
     // Paper end - Reset loggers after shutdown
 
     public static void main(String[] args) {
-        if (System.getProperty("jdk.nio.maxCachedBufferSize") == null) System.setProperty("jdk.nio.maxCachedBufferSize", "262144"); // Paper - cap per-thread NIO cache size; https://www.evanjones.ca/java-bytebuffer-leak.html
+        io.papermc.paper.util.PapyrusPerformance.applyRuntimeDefaults(); // Papyrus - runtime performance defaults
         OptionParser parser = new OptionParser() {
             {
                 this.acceptsAll(asList("?", "help"), "Show the help");

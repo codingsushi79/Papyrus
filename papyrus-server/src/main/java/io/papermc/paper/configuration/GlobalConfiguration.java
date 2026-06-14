@@ -29,7 +29,7 @@ import java.util.Set;
 @SuppressWarnings({"CanBeFinal", "FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
 public class GlobalConfiguration extends ConfigurationPart {
     private static final Logger LOGGER = LogUtils.getLogger();
-    static final int CURRENT_VERSION = 31; // (when you change the version, change the comment, so it conflicts on rebases): allow-nether property to config
+    static final int CURRENT_VERSION = 32; // (when you change the version, change the comment, so it conflicts on rebases): entity random source configuration
     private static GlobalConfiguration instance;
     public static boolean isFirstStart = false;
     public static GlobalConfiguration get() {
@@ -76,6 +76,7 @@ public class GlobalConfiguration extends ConfigurationPart {
     }
     static void set(final GlobalConfiguration instance) {
         GlobalConfiguration.instance = instance;
+        io.papermc.paper.util.EntityRandomSources.refresh();
     }
 
     @Setting(Configuration.VERSION_FIELD)
@@ -100,7 +101,7 @@ public class GlobalConfiguration extends ConfigurationPart {
     public Spark spark;
 
     public class Spark extends ConfigurationPart {
-        public boolean enabled = true;
+        public boolean enabled = false;
         public boolean enableImmediately = false;
     }
 
@@ -214,7 +215,9 @@ public class GlobalConfiguration extends ConfigurationPart {
 
     public class ChunkSystem extends ConfigurationPart {
 
+        @Comment("Chunk I/O threads. Set to 0 or -1 to auto-detect based on CPU count (recommended).")
         public int ioThreads = -1;
+        @Comment("Chunk worker threads. Set to 0 or -1 to auto-detect based on CPU count (recommended).")
         public int workerThreads = -1;
 
         @PostProcess
@@ -322,7 +325,7 @@ public class GlobalConfiguration extends ConfigurationPart {
         public boolean sendFullPosForItemEntities = false;
         public boolean loadPermissionsYmlBeforePlugins = true;
         @Constraints.Min(4)
-        public int regionFileCacheSize = 256;
+        public int regionFileCacheSize = 512;
         @Comment("See https://luckformula.emc.gs")
         public boolean useAlternativeLuckFormula = false;
         public boolean useDimensionTypeForCustomSpawners = false;
@@ -392,6 +395,22 @@ public class GlobalConfiguration extends ConfigurationPart {
     public UpdateChecker updateChecker;
 
     public class UpdateChecker extends ConfigurationPart {
-        public boolean enabled = true;
+        public boolean enabled = false;
+    }
+
+    public Performance performance;
+
+    public class Performance extends ConfigurationPart {
+        @Comment(
+            "Controls how entity random number generation works.\n" +
+            "SHARED: All entities share one random source (Paper default). Better performance, but breaks vanilla-like RNG predictability used by enchantment seed manipulation and similar techniques.\n" +
+            "VANILLA: Each entity gets its own independent random source matching vanilla behavior. Slightly lower performance."
+        )
+        public EntityRandomSource entityRandomSource = EntityRandomSource.SHARED;
+
+        public enum EntityRandomSource {
+            SHARED,
+            VANILLA
+        }
     }
 }

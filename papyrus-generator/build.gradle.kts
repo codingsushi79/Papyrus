@@ -15,13 +15,13 @@ val serverRuntimeClasspath by configurations.registering { // resolvable?
 }
 
 dependencies {
-    minecraftJar(project(":paper-server", "mappedJarOutgoing"))
-    implementation(project(":paper-server", "macheMinecraftLibraries"))
+    minecraftJar(project(":papyrus-server", "mappedJarOutgoing"))
+    implementation(project(":papyrus-server", "macheMinecraftLibraries"))
 
     implementation("com.squareup:javapoet:1.13.0")
-    implementation(project(":paper-api"))
+    implementation(project(":papyrus-api"))
     implementation("io.papermc.typewriter:typewriter:1.0.1") {
-        isTransitive = false // paper-api already have everything
+        isTransitive = false // papyrus-api already have everything
     }
     implementation("info.picocli:picocli:4.7.7")
     implementation("io.github.classgraph:classgraph:4.8.184")
@@ -29,21 +29,21 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.0.3")
 
-    serverRuntimeClasspath(project(":paper-server", "runtimeConfiguration"))
+    serverRuntimeClasspath(project(":papyrus-server", "runtimeConfiguration"))
 }
 
 val gameVersion = providers.gradleProperty("mcVersion")
 
 val rewriteApi = tasks.registerGenerationTask("rewriteApi", true, "api", {
     bootstrapTags = true
-    sourceSet = rootProject.layout.projectDirectory.dir("paper-api")
+    sourceSet = rootProject.layout.projectDirectory.dir("papyrus-api")
 }) {
     description = "Rewrite existing API classes"
     classpath(sourceSets.main.map { it.runtimeClasspath })
 }
 
 val rewriteImpl = tasks.registerGenerationTask("rewriteImpl", true, "impl", {
-    sourceSet = rootProject.layout.projectDirectory.dir("paper-server")
+    sourceSet = rootProject.layout.projectDirectory.dir("papyrus-server")
     serverClassPath.from(serverRuntimeClasspath)
 }) {
     description = "Rewrite existing implementation classes"
@@ -59,14 +59,14 @@ tasks.register("rewrite") {
 
 val generateApi = tasks.registerGenerationTask("generateApi", false, "api", {
     bootstrapTags = true
-    sourceSet = rootProject.layout.projectDirectory.dir("paper-api")
+    sourceSet = rootProject.layout.projectDirectory.dir("papyrus-api")
 }) {
     description = "Generate new API classes"
     classpath(sourceSets.main.map { it.runtimeClasspath })
 }
 
 val generateImpl = tasks.registerGenerationTask("generateImpl", false, "impl", {
-    sourceSet = rootProject.layout.projectDirectory.dir("paper-server")
+    sourceSet = rootProject.layout.projectDirectory.dir("papyrus-server")
 }) {
     description = "Generate new implementation classes"
     classpath(sourceSets.main.map { it.runtimeClasspath })

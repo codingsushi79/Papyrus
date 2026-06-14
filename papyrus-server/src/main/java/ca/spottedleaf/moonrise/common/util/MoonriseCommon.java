@@ -54,7 +54,13 @@ public final class MoonriseCommon {
             workerThreads = defaultWorkerThreads;
         }
 
-        final int ioThreads = Math.max(1, configIoThreads);
+        final int ioThreads;
+        if (configIoThreads <= 0) {
+            final int cores = OSNuma.getNativeInstance().getTotalCores();
+            ioThreads = Math.min(4, Math.max(1, cores / 4));
+        } else {
+            ioThreads = configIoThreads;
+        }
 
         WORKER_POOL.adjustThreadCount(workerThreads);
         IO_POOL.adjustThreadCount(ioThreads);

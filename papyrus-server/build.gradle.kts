@@ -109,7 +109,7 @@ abstract class MockitoAgentProvider : CommandLineArgumentProvider {
 }
 
 dependencies {
-    implementation(project(":paper-api"))
+    implementation(project(":papyrus-api"))
     implementation("ca.spottedleaf:concurrentutil:0.0.10")
     implementation("org.jline:jline-terminal-ffm:3.27.1") // use ffm on java 22+
     implementation("org.jline:jline-terminal-jni:3.27.1") // fall back to jni on java 21
@@ -171,14 +171,14 @@ tasks.jar {
         val gitBranch = git.exec(providers, "rev-parse", "--abbrev-ref", "HEAD").get().trim()
         attributes(
             "Main-Class" to "org.bukkit.craftbukkit.Main",
-            "Implementation-Title" to "Paper",
+            "Implementation-Title" to "Papyrus",
             "Implementation-Version" to implementationVersion,
-            "Implementation-Vendor" to date,
-            "Specification-Title" to "Paper",
+            "Implementation-Vendor" to "SushiMC",
+            "Specification-Title" to "Papyrus",
             "Specification-Version" to project.version,
-            "Specification-Vendor" to "Paper Team",
-            "Brand-Id" to "papermc:paper",
-            "Brand-Name" to "Paper",
+            "Specification-Vendor" to "SushiMC",
+            "Brand-Id" to "sushimc:papyrus",
+            "Brand-Name" to "Papyrus",
             "Build-Number" to (build ?: ""),
             "Build-Time" to buildTime.toString(),
             "Git-Branch" to gitBranch,
@@ -195,9 +195,9 @@ tasks.compileTestJava {
     options.compilerArgs.add("-parameters")
 }
 
-// Bump compile tasks to 1GB memory to avoid OOMs
+// Bump compile tasks to 2GB memory to avoid OOMs and improve compile throughput
 tasks.withType<JavaCompile>().configureEach {
-    options.forkOptions.memoryMaximumSize = "1G"
+    options.forkOptions.memoryMaximumSize = "2G"
 }
 
 val scanJarForBadCalls by tasks.registering(io.papermc.paperweight.tasks.ScanJarForBadCalls::class) {
@@ -316,7 +316,7 @@ tasks.registerRunTask("runPaperclip") {
 }
 
 fill {
-    project("paper")
+    project("papyrus")
     versionFamily(paperweight.minecraftVersion.map { it.split(".", "-").takeWhile { part -> part.toIntOrNull() != null }.take(2).joinToString(".") })
     version(paperweight.minecraftVersion)
 
@@ -330,4 +330,14 @@ fill {
             }
         }
     }
+}
+
+val syncPapyrusPaperclipJar = tasks.register<Copy>("syncPapyrusPaperclipJar") {
+    group = "build"
+    description = "Copy the paperclip jar using Papyrus naming"
+    val archiveVersion = project.version.toString()
+    dependsOn(tasks.createPaperclipJar)
+    from(tasks.createPaperclipJar.flatMap { it.outputZip })
+    into(layout.buildDirectory.dir("distributions"))
+    rename { "papyrus-paperclip-$archiveVersion.jar" }
 }

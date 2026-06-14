@@ -133,7 +133,7 @@ public class SpigotConfig {
 
     public static boolean logCommands;
     private static void logCommands() {
-        SpigotConfig.logCommands = SpigotConfig.getBoolean("commands.log", true);
+        SpigotConfig.logCommands = SpigotConfig.getBoolean("commands.log", false);
     }
 
     public static int tabComplete;
@@ -196,7 +196,12 @@ public class SpigotConfig {
     }
 
     private static void nettyThreads() {
-        int count = SpigotConfig.getInt("settings.netty-threads", 4);
+        final int count;
+        if (!SpigotConfig.config.contains("settings.netty-threads")) {
+            count = Math.min(8, Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
+        } else {
+            count = SpigotConfig.getInt("settings.netty-threads", 4);
+        }
         System.setProperty("io.netty.eventLoopThreads", Integer.toString(count));
         Bukkit.getLogger().log(Level.INFO, "Using {0} threads for Netty based IO", count);
     }

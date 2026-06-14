@@ -150,13 +150,13 @@ public class WorldConfiguration extends ConfigurationPart {
 
         public class ArmorStands extends ConfigurationPart {
             public boolean doCollisionEntityLookups = true;
-            public boolean tick = true;
+            public boolean tick = false;
         }
 
         public Markers markers;
 
         public class Markers extends ConfigurationPart {
-            public boolean tick = true;
+            public boolean tick = false;
         }
 
         public Sniffer sniffer;
@@ -402,7 +402,7 @@ public class WorldConfiguration extends ConfigurationPart {
     public Scoreboards scoreboards;
 
     public class Scoreboards extends ConfigurationPart {
-        public boolean allowNonPlayerEntitiesOnScoreboards = true;
+        public boolean allowNonPlayerEntitiesOnScoreboards = false;
         public boolean useVanillaWorldScoreboardNameColoring = false;
     }
 
@@ -411,7 +411,7 @@ public class WorldConfiguration extends ConfigurationPart {
     public class Environment extends ConfigurationPart {
         public boolean disableThunder = false;
         public boolean disableIceAndSnow = false;
-        public boolean optimizeExplosions = false;
+        public boolean optimizeExplosions = true;
         public boolean disableExplosionKnockback = false;
         public boolean generateFlatBedrock = false;
         public FrostedIce frostedIce;
@@ -476,7 +476,7 @@ public class WorldConfiguration extends ConfigurationPart {
 
     public class UnsupportedSettings extends ConfigurationPart {
         public boolean fixInvulnerableEndCrystalExploit = true;
-        public boolean disableWorldTickingWhenEmpty = false;
+        public boolean disableWorldTickingWhenEmpty = true;
         public Ticking ticking;
 
         public class Ticking extends ConfigurationPart {
@@ -490,7 +490,7 @@ public class WorldConfiguration extends ConfigurationPart {
     public class Hopper extends ConfigurationPart {
         public boolean cooldownWhenFull = true;
         public boolean disableMoveEvent = false;
-        public boolean ignoreOccludingBlocks = false;
+        public boolean ignoreOccludingBlocks = true;
     }
 
     public Collisions collisions;
@@ -514,12 +514,12 @@ public class WorldConfiguration extends ConfigurationPart {
         public Duration delayChunkUnloadsBy = Duration.of("10s");
         public Reference2IntMap<EntityType<?>> entityPerChunkSaveLimit = Util.make(new Reference2IntOpenHashMap<>(BuiltInRegistries.ENTITY_TYPE.size()), map -> {
             map.defaultReturnValue(-1);
-            map.put(EntityType.EXPERIENCE_ORB, -1);
-            map.put(EntityType.SNOWBALL, -1);
-            map.put(EntityType.ENDER_PEARL, -1);
-            map.put(EntityType.ARROW, -1);
-            map.put(EntityType.FIREBALL, -1);
-            map.put(EntityType.SMALL_FIREBALL, -1);
+            map.put(EntityType.EXPERIENCE_ORB, 32);
+            map.put(EntityType.SNOWBALL, 8);
+            map.put(EntityType.ENDER_PEARL, 8);
+            map.put(EntityType.ARROW, 16);
+            map.put(EntityType.FIREBALL, 8);
+            map.put(EntityType.SMALL_FIREBALL, 8);
         });
         public boolean flushRegionsOnSave = false;
 
@@ -574,9 +574,19 @@ public class WorldConfiguration extends ConfigurationPart {
     public Misc misc;
 
     public class Misc extends ConfigurationPart {
-        public boolean updatePathfindingOnBlockUpdate = true;
+        public boolean updatePathfindingOnBlockUpdate = false;
         public boolean showSignClickCommandFailureMsgsToPlayer = false;
+        @Comment(
+            "Controls which redstone wire implementation is used.\n" +
+            "VANILLA: Matches vanilla Minecraft redstone behavior and update order (recommended for vanilla parity).\n" +
+            "EIGENCRAFT: Faster BFS-based wire propagation with deterministic update order. Changes behavior from vanilla.\n" +
+            "ALTERNATE_CURRENT: Alternative fast implementation with configurable update order. Changes behavior from vanilla."
+        )
         public RedstoneImplementation redstoneImplementation = RedstoneImplementation.VANILLA;
+        @Comment(
+            "Only applies when redstone-implementation is set to ALTERNATE_CURRENT.\n" +
+            "Controls the order in which redstone wire updates propagate."
+        )
         public AlternateCurrentUpdateOrder alternateCurrentUpdateOrder = AlternateCurrentUpdateOrder.HORIZONTAL_FIRST_OUTWARD;
         public boolean disableEndCredits = false;
         public DoubleOr.Default maxLeashDistance = DoubleOr.Default.USE_DEFAULT;

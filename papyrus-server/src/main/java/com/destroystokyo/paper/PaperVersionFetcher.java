@@ -41,9 +41,9 @@ public class PaperVersionFetcher implements VersionFetcher {
     private static final int DISTANCE_ERROR = -1;
     private static final int DISTANCE_UNKNOWN = -2;
     private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper";
-    private static final String REPOSITORY = "PaperMC/Paper";
+    private static final String REPOSITORY = "SushiMC/Papyrus";
     private static final ServerBuildInfo BUILD_INFO = ServerBuildInfo.buildInfo();
-    private static final String USER_AGENT = BUILD_INFO.brandName() + "/" + BUILD_INFO.asString(VERSION_SIMPLE) + " (https://papermc.io)";
+    private static final String USER_AGENT = BUILD_INFO.brandName() + "/" + BUILD_INFO.asString(VERSION_SIMPLE) + " (Papyrus by SushiMC)";
     private static final Gson GSON = new Gson();
 
     @Override
@@ -53,6 +53,9 @@ public class PaperVersionFetcher implements VersionFetcher {
 
     @Override
     public Component getVersionMessage() {
+        if (!BUILD_INFO.brandId().equals(ServerBuildInfo.BRAND_PAPER_ID)) {
+            return text("Running " + BUILD_INFO.brandName() + " by SushiMC", NamedTextColor.GREEN);
+        }
         final Component updateMessage;
         if (BUILD_INFO.buildNumber().isEmpty() && BUILD_INFO.gitCommit().isEmpty()) {
             updateMessage = text("You are running a development version without access to version information", color(0xFF5300));
@@ -65,6 +68,9 @@ public class PaperVersionFetcher implements VersionFetcher {
     }
 
     public static void getUpdateStatusStartupMessage() {
+        if (!BUILD_INFO.brandId().equals(ServerBuildInfo.BRAND_PAPER_ID)) {
+            return;
+        }
         int distance = DISTANCE_ERROR;
 
         final OptionalInt buildNumber = BUILD_INFO.buildNumber();

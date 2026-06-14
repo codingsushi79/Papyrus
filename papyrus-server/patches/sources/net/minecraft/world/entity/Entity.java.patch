@@ -111,7 +111,7 @@
      public double zOld;
      public boolean noPhysics;
 -    public final RandomSource random = RandomSource.create();
-+    public final RandomSource random = SHARED_RANDOM; // Paper - Share random for entities to make them more random
++    public RandomSource random; // Paper/Papyrus - configurable entity random source; initialized in constructor
      public int tickCount;
      private int remainingFireTicks;
      private final EntityFluidInteraction fluidInteraction = new EntityFluidInteraction(Set.of(FluidTags.WATER, FluidTags.LAVA));
@@ -178,6 +178,7 @@
          this.setPos(0.0, 0.0, 0.0);
          this.eyeHeight = this.dimensions.eyeHeight();
 +        this.despawnTime = level == null || type == EntityType.PLAYER ? -1 : level.paperConfig().entities.spawning.despawnTime.getOrDefault(type, io.papermc.paper.configuration.type.number.IntOr.Disabled.DISABLED).or(-1); // Paper - entity despawn time limit
++        this.random = io.papermc.paper.util.EntityRandomSources.createForEntity(); // Papyrus - configurable entity random source
      }
  
      public boolean isColliding(final BlockPos pos, final BlockState state) {

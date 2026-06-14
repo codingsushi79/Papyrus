@@ -117,6 +117,7 @@ configurations {
             outgoing {
                 capability(mainCapability)
                 // Paper-MojangAPI has been merged into Paper-API
+                capability("io.papermc.paper:paper-api:${project.version}")
                 capability("io.papermc.paper:paper-mojangapi:${project.version}")
                 capability("com.destroystokyo.paper:paper-mojangapi:${project.version}")
                 // Conflict with old coordinates
@@ -130,6 +131,8 @@ configurations {
 
 configure<PublishingExtension> {
     publications.create<MavenPublication>("maven") {
+        // Publish as paper-api so existing Paper plugin build scripts keep working
+        artifactId = "paper-api"
         // For Brigadier API
         outgoingVariants.forEach {
             suppressPomMetadataWarningsFor(it)

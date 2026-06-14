@@ -62,10 +62,10 @@ Assuming you have already forked the repository:
 1. Clone your fork to your local machine;
 2. Type `./gradlew applyPatches` in a terminal to apply the patches.
 On Windows, remove the `./` the beginning of `gradlew` commands;
-3. cd into `paper-server` for server changes, and `paper-api` for API changes.
-**Only changes made in `paper-server/src/minecraft` have to deal with the patch system.**
+3. cd into `papyrus-server` for server changes, and `papyrus-api` for API changes.
+**Only changes made in `papyrus-server/src/minecraft` have to deal with the patch system.**
 
-`paper-server/src/minecraft` is not a git repositories in the traditional sense. Its
+`papyrus-server/src/minecraft` is not a git repositories in the traditional sense. Its
 initial commits are the decompiled Minecraft source files. The per-file
 patches are applied on top of these files as a single, large commit, which is then followed
 by the individual feature-patch commits.
@@ -88,7 +88,7 @@ edit it using `git rebase`.
 0. If you have changes you are working on, type `git stash` to store them for
    later;
     - You can type `git stash pop` to get them back at any point.
-1. cd into `paper-server/src/minecraft/java` and run `git rebase -i base`;
+1. cd into `papyrus-server/src/minecraft/java` and run `git rebase -i base`;
     - It should show something like
       [this](https://gist.github.com/zachbr/21e92993cb99f62ffd7905d7b02f3159) in
       the text editor you get.
@@ -115,7 +115,7 @@ since we can temporarily drop these patches and reapply them later.
 There is only a very small chance that you will have to use this system, but adding
 such patches is very simple:
 
-1. Modify `paper-server/src/minecraft` with the appropriate changes;
+1. Modify `papyrus-server/src/minecraft` with the appropriate changes;
 1. Run `git add .` inside that directory to add your changes;
 1. Run `git commit` with the desired patch message;
 1. Run `./gradlew rebuildPatches` in the root directory.

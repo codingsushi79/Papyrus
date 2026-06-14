@@ -20,6 +20,11 @@ public interface ServerBuildInfo {
     Key BRAND_PAPER_ID = Key.key("papermc", "paper");
 
     /**
+     * The brand id for Papyrus by SushiMC.
+     */
+    Key BRAND_PAPYRUS_ID = Key.key("sushimc", "papyrus");
+
+    /**
      * Gets the {@code ServerBuildInfo}.
      *
      * @return the {@code ServerBuildInfo}

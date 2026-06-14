@@ -37,7 +37,7 @@
 +
 +    @Override
 +    public String getBrand() {
-+        return "Paper";
++        return io.papermc.paper.ServerBuildInfo.buildInfo().brandName();
 +    }
 +
 +    @Override
