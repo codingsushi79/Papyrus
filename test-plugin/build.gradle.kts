@@ -1,7 +1,7 @@
 version = "1.0.0-SNAPSHOT"
 
 dependencies {
-    compileOnly(project(":papyrus-api"))
+    compileOnly(project(":paper-api"))
 }
 
 tasks.processResources {

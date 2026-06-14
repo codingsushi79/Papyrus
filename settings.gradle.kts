@@ -27,10 +27,10 @@ if (!file(".git").exists()) {
 
 rootProject.name = "papyrus"
 
-for (name in listOf("papyrus-api", "papyrus-server")) {
-    include(name)
-    file(name).mkdirs()
-}
+// paperweight hardcodes paper-server paths; use a paper-server -> papyrus-server symlink at repo root
+include("paper-api", "paper-server")
+project(":paper-api").projectDir = file("papyrus-api")
+project(":paper-server").projectDir = file("paper-server")
 
 optionalInclude("test-plugin")
 optionalInclude("papyrus-generator")

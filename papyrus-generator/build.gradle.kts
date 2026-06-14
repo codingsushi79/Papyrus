@@ -15,11 +15,11 @@ val serverRuntimeClasspath by configurations.registering { // resolvable?
 }
 
 dependencies {
-    minecraftJar(project(":papyrus-server", "mappedJarOutgoing"))
-    implementation(project(":papyrus-server", "macheMinecraftLibraries"))
+    minecraftJar(project(":paper-server", "mappedJarOutgoing"))
+    implementation(project(":paper-server", "macheMinecraftLibraries"))
 
     implementation("com.squareup:javapoet:1.13.0")
-    implementation(project(":papyrus-api"))
+    implementation(project(":paper-api"))
     implementation("io.papermc.typewriter:typewriter:1.0.1") {
         isTransitive = false // papyrus-api already have everything
     }
@@ -29,7 +29,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:6.0.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.0.3")
 
-    serverRuntimeClasspath(project(":papyrus-server", "runtimeConfiguration"))
+    serverRuntimeClasspath(project(":paper-server", "runtimeConfiguration"))
 }
 
 val gameVersion = providers.gradleProperty("mcVersion")
