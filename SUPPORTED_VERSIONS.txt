@@ -1,5 +1,6 @@
-# Minecraft versions with papyrus-shield mod builds (keep in sync with Papyrus-Client).
-# Papyrus server jar is only published for 26.1.2; mod builds cover all listed versions.
+# Supported Minecraft versions for Papyrus server jar builds.
+# 26.1.2 — full Papyrus tree (main / release tag): anticheat, branding, config options.
+# 1.21.x — built from upstream Paper commits in this repo; renamed to Papyrus-<mc>.jar.
 
 26.1.2
 1.21.11
