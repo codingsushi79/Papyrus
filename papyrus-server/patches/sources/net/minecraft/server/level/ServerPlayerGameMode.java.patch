@@ -302,6 +302,12 @@
 +        }
 +        // Paper end - Trigger bee_nest_destroyed trigger in the correct place
 +        // CraftBukkit end
++
++        // Papyrus start - integrated anticheat
++        if (changed && block != null) {
++            io.papermc.paper.anticheat.PapyrusAnticheat.onBlockBroken(this.player, block);
++        }
++        // Papyrus end - integrated anticheat
  
          return true;
      }

@@ -27,6 +27,8 @@ import io.papermc.paper.configuration.transformation.global.versioned.V30_Packet
 import io.papermc.paper.configuration.transformation.global.versioned.V31_AllowNetherPropertiesToConfig;
 import io.papermc.paper.configuration.transformation.global.versioned.V32_EntityRandomSource;
 import io.papermc.paper.configuration.transformation.global.versioned.V33_PapyrusPerformanceOptions;
+import io.papermc.paper.configuration.transformation.global.versioned.V34_PapyrusAnticheatEngine;
+import io.papermc.paper.configuration.transformation.global.versioned.V35_PapyrusClientIntegrity;
 import io.papermc.paper.configuration.transformation.world.FeatureSeedsGeneration;
 import io.papermc.paper.configuration.transformation.world.LegacyPaperWorldConfig;
 import io.papermc.paper.configuration.transformation.world.versioned.V29_ZeroWorldHeight;
@@ -109,7 +111,7 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
             See https://docs.sushii.dev/papyrus/ for documentation.
 
             Papyrus-specific global options live under the performance section (entity RNG,
-            JVM defaults, Netty threads).
+            JVM defaults, Netty threads) and anticheat.engine (integrated anticheat checks).
 
             The world configuration options have been moved inside
             their respective world folder. The files are named %s""", WORLD_CONFIG_FILE_NAME);
@@ -119,8 +121,8 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
             As you can see, there's a lot to configure. Some options may impact gameplay, so use
             with caution, and make sure you know what each option does before configuring.
 
-            Papyrus adds world options for experience orbs, redstone engines, and performance
-            presets. See https://docs.sushii.dev/papyrus/ for documentation.
+            Papyrus adds world options for experience orbs, redstone engines, performance presets, and a built-in anticheat engine.
+            See https://docs.sushii.dev/papyrus/ for documentation.
 
             Configuration options here apply to all worlds, unless you specify overrides inside
             the world-specific config file inside each world folder.""";
@@ -298,6 +300,8 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
         V31_AllowNetherPropertiesToConfig.apply(versionedBuilder);
         V32_EntityRandomSource.apply(versionedBuilder);
         V33_PapyrusPerformanceOptions.apply(versionedBuilder);
+        V34_PapyrusAnticheatEngine.apply(versionedBuilder);
+        V35_PapyrusClientIntegrity.apply(versionedBuilder);
         // ADD FUTURE VERSIONED TRANSFORMS TO versionedBuilder HERE
         versionedBuilder.build().apply(node);
     }

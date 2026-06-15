@@ -693,6 +693,7 @@
 @@ -1057,10 +_,10 @@
      public void handleMovePlayer(final ServerboundMovePlayerPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.level());
++        io.papermc.paper.anticheat.PapyrusAnticheat.onIncomingPacket(this.player); // Papyrus - anticheat packet budget
          if (containsInvalidValues(packet.getX(0.0), packet.getY(0.0), packet.getZ(0.0), packet.getYRot(0.0F), packet.getXRot(0.0F))) {
 -            this.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_movement"));
 +            this.disconnect(Component.translatable("multiplayer.disconnect.invalid_player_movement"), org.bukkit.event.player.PlayerKickEvent.Cause.INVALID_PLAYER_MOVEMENT); // Paper - kick event cause
@@ -813,6 +814,7 @@
 +                                xDist = targetX - this.lastGoodX; // Paper - diff on change, used for checking large move vectors above
 +                                yDist = targetY - this.lastGoodY; // Paper - diff on change, used for checking large move vectors above
 +                                zDist = targetZ - this.lastGoodZ; // Paper - diff on change, used for checking large move vectors above
++                                io.papermc.paper.anticheat.PapyrusAnticheat.onMovement(this.player, xDist, yDist, zDist, Math.max(1, this.receivedMovePacketCount - this.knownMovePacketCount)); // Papyrus - anticheat movement
                                  boolean movedUpwards = yDist > 0.0;
                                  if (this.player.onGround() && !packet.isOnGround() && movedUpwards) {
 -                                    this.player.jumpFromGround();
@@ -1088,6 +1090,9 @@
 @@ -1291,32 +_,95 @@
                  case SWAP_ITEM_WITH_OFFHAND:
                      if (!this.player.isSpectator()) {
++                        if (!io.papermc.paper.anticheat.PapyrusAnticheat.onHandSwap(this.player)) { // Papyrus - anticheat
++                            return;
++                        }
                          ItemStack swap = this.player.getItemInHand(InteractionHand.OFF_HAND);
 -                        this.player.setItemInHand(InteractionHand.OFF_HAND, this.player.getItemInHand(InteractionHand.MAIN_HAND));
 -                        this.player.setItemInHand(InteractionHand.MAIN_HAND, swap);
@@ -1157,6 +1162,10 @@
 +                        return;
 +                    }
 +                    // Paper end - Don't allow digging into unloaded chunks
++                    if (!io.papermc.paper.anticheat.PapyrusAnticheat.onBlockBreakStart(this.player, pos)) { // Papyrus - anticheat
++                        this.player.connection.ackBlockChangesUpTo(packet.getSequence());
++                        return;
++                    }
 +                    // Paper start - Send block entities after destroy prediction
 +                    this.player.gameMode.capturedBlockEntity = false;
 +                    this.player.gameMode.captureSentBlockEntities = true;
@@ -1217,6 +1226,7 @@
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.level());
 +        if (this.player.isImmobile()) return; // CraftBukkit
 +        if (!this.checkLimit(packet.timestamp)) return; // Spigot - check limit
++        io.papermc.paper.anticheat.PapyrusAnticheat.onIncomingPacket(this.player); // Papyrus - anticheat
          if (this.hasClientLoaded()) {
              this.ackBlockChangesUpTo(packet.getSequence());
              ServerLevel level = this.player.level();
@@ -1244,6 +1254,9 @@
 -                            } else if (this.awaitingPositionFromClient == null && level.mayInteract(this.player, pos)) {
 +                            } else if (this.awaitingPositionFromClient == null && (level.mayInteract(this.player, pos) || passthroughSignInteraction)) {
 +                                // Paper end - Allow using signs inside spawn protection
++                                if (!io.papermc.paper.anticheat.PapyrusAnticheat.onUseItemOn(this.player, blockHit)) { // Papyrus - anticheat
++                                    return;
++                                }
 +                                this.player.stopUsingItem(); // CraftBukkit - SPIGOT-4706
                                  InteractionResult interactionResult = this.player.gameMode.useItemOn(this.player, level, itemStack, hand, blockHit);
                                  if (interactionResult.consumesAction()) {
@@ -1980,6 +1993,7 @@
      public void handleContainerClick(final ServerboundContainerClickPacket packet) {
          PacketUtils.ensureRunningOnSameThread(packet, this, this.player.level());
 +        if (this.player.isImmobile()) return; // CraftBukkit
++        if (!io.papermc.paper.anticheat.PapyrusAnticheat.onInventoryClick(this.player)) return; // Papyrus - anticheat
          this.player.resetLastActionTime();
 -        if (this.player.containerMenu.containerId == packet.containerId()) {
 -            if (this.player.isSpectator()) {
@@ -2582,6 +2596,9 @@
  
      @Override
      public void handleCustomPayload(final ServerboundCustomPayloadPacket packet) {
++        if (io.papermc.paper.anticheat.client.ClientIntegrityHandler.handlePayload(this, packet.payload())) {
++            return;
++        }
 +        super.handleCustomPayload(packet); // Paper
      }
  

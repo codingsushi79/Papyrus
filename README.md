@@ -16,6 +16,7 @@ Documentation: [docs.sushii.dev/papyrus](https://docs.sushii.dev/papyrus/)
 - [Running in production](#running-in-production)
 - [Configuration](#configuration)
 - [Papyrus-specific options](#papyrus-specific-options)
+- [Integrated anticheat](#integrated-anticheat)
 - [Performance tuning](#performance-tuning)
 - [Vanilla compatibility preset](#vanilla-compatibility-preset)
 - [Redstone presets](#redstone-presets)
@@ -41,6 +42,7 @@ Paper optimizes Minecraft in ways that sometimes diverge from vanilla behavior. 
 | Experience orbs | Paper defaults | Configurable despawn, pickup radius, merge radius, and merge disable |
 | Performance defaults | Paper defaults | Tuned defaults for chunk I/O, explosions, hoppers, idle worlds, JVM/Netty |
 | Update checker | Checks PaperMC | Disabled by default (fork-specific builds) |
+| Anticheat | External plugins (GrimAC, etc.) | Built-in configurable engine (x-ray heuristics, reach, rates) |
 
 Everything else — Moonrise chunk system, incremental saves, hopper optimizations, plugin API, and the patch-based build — comes from upstream Paper unchanged.
 
@@ -215,6 +217,8 @@ entities:
 
 Lower `experience-orb-pickup-radius` to reduce orb lag on grinder servers. Set `disable-experience-orb-merge: true` if you want orbs to stay separate.
 
+Lower `experience-orb-pickup-radius` to reduce orb lag on grinder servers. Set `disable-experience-orb-merge: true` if you want orbs to stay separate.
+
 ### Redstone implementation
 
 **File:** `config/paper-world-defaults.yml` or `<world>/paper-world.yml`
@@ -244,6 +248,64 @@ chunk-system:
 ```
 
 Papyrus auto-scales I/O threads to `min(4, max(1, cpu_cores / 4))` when set to `-1` or `0`. Paper previously pinned this to a single I/O thread.
+
+---
+
+## Integrated anticheat
+
+Papyrus ships a built-in anticheat engine under `config/paper-global.yml`. It runs at packet level (before actions apply) and does not require a plugin. Disable external anticheat plugins if you use this to avoid duplicate kicks.
+
+```yaml
+anticheat:
+  engine:
+    enabled: true
+    alerts:
+      console: true
+      notify-ops: false
+    punishments:
+      kick-enabled: true
+      kick-violation-level: 40
+      violation-decay-per-second: 2.0
+    checks:
+      xray:
+        enabled: true
+        window-seconds: 300
+        suspicious-ore-count: 14
+        tracked-ores:
+          - minecraft:diamond_ore
+          - minecraft:deepslate_diamond_ore
+      fast-place:
+        max-per-second: 12
+        cancel-action: true
+      fast-break:
+        max-per-second: 8
+      inventory:
+        max-clicks-per-second: 25
+      hand-swap:
+        max-swaps-per-second: 8
+      reach:
+        block-extra-distance: 0.35
+      movement:
+        max-horizontal-blocks-per-tick: 0.85
+        setback: true
+      timer:
+        max-packets-per-second: 140
+```
+
+| Check | What it detects |
+|-------|-----------------|
+| **xray** | Valuable ores mined unusually fast or with suspicious ore-to-stone ratios |
+| **fast-place** / **fast-break** | Block place/break rates above human limits |
+| **inventory** / **hand-swap** | Inventory click and offhand swap spam (autoclickers, quick swap macros) |
+| **reach** | Block interactions beyond vanilla interaction range |
+| **movement** | Horizontal/vertical movement per tick above configured limits |
+| **timer** | Incoming packet rate spikes |
+
+**Bypass permission:** `papyrus.anticheat.bypass`
+
+**Plugin hook:** `PlayerAnticheatViolationEvent` — cancel the event to ignore a flag.
+
+Item component obfuscation (`anticheat.obfuscation`) and per-world Anti-Xray (`anticheat.anti-xray` in world config) remain separate features and complement the engine.
 
 ---
 
@@ -560,6 +622,9 @@ Set `misc.redstone-implementation: VANILLA` in your world config. This is alread
 
 **Why is the jar named `papyrus-paperclip`?**  
 The bootstrap tool (`paperclip`) comes from upstream Paper. Papyrus copies the build output to `papyrus-paperclip-*.jar`.
+
+**Can I use GrimAC or another anticheat plugin alongside Papyrus?**  
+You can, but Papyrus includes a built-in engine (`anticheat.engine` in `paper-global.yml`). Running both may cause duplicate flags — disable one or set `anticheat.engine.enabled: false` if you prefer an external plugin.
 
 **Where do I report bugs?**  
 Open an issue at [github.com/codingsushi79/Papyrus/issues](https://github.com/codingsushi79/Papyrus/issues). Specify whether the bug exists in upstream Paper or is Papyrus-specific.

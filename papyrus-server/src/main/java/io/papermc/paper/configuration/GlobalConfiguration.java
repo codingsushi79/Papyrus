@@ -29,7 +29,7 @@ import java.util.Set;
 @SuppressWarnings({"CanBeFinal", "FieldCanBeLocal", "FieldMayBeFinal", "NotNullFieldNotInitialized", "InnerClassMayBeStatic"})
 public class GlobalConfiguration extends ConfigurationPart {
     private static final Logger LOGGER = LogUtils.getLogger();
-    static final int CURRENT_VERSION = 33; // (when you change the version, change the comment, so it conflicts on rebases): papyrus performance tuning options
+    static final int CURRENT_VERSION = 35; // (when you change the version, change the comment, so it conflicts on rebases): papyrus client integrity
     private static GlobalConfiguration instance;
     public static boolean isFirstStart = false;
     public static GlobalConfiguration get() {
@@ -360,6 +360,191 @@ public class GlobalConfiguration extends ConfigurationPart {
     public class Anticheat extends ConfigurationPart {
 
         public Obfuscation obfuscation;
+        public Engine engine;
+        public ClientIntegrity clientIntegrity;
+
+        public class ClientIntegrity extends ConfigurationPart {
+            @Comment(
+                "Requires Papyrus Client / papyrus-shield mod to report installed Fabric mods.\n" +
+                "Players without a valid report are kicked with download-url. See https://docs.sushii.dev/papyrus-client/"
+            )
+            public boolean enabled = false;
+            public boolean requirePapyrusClient = true;
+            public boolean requireShieldMod = true;
+            public int responseTimeoutSeconds = 15;
+            public String downloadUrl = "https://docs.sushii.dev/papyrus-client/download";
+            public Component missingClientMessage = Component.text()
+                .append(Component.text("This server requires ", NamedTextColor.RED))
+                .append(Component.text("Papyrus Client", NamedTextColor.GOLD))
+                .append(Component.text(" with client integrity.\nDownload: ", NamedTextColor.RED))
+                .append(Component.text("https://docs.sushii.dev/papyrus-client/download", NamedTextColor.AQUA))
+                .build();
+            public String bannedModMessage = "Banned client mod detected: {mod}";
+
+            public Alerts alerts;
+
+            public class Alerts extends ConfigurationPart {
+                public boolean console = true;
+            }
+
+            @Comment("Mod ids (substring match) that are blocked when reported by the client.")
+            public java.util.List<String> bannedModIds = java.util.List.of(
+                "meteor-client",
+                "wurst",
+                "aristois",
+                "impact",
+                "inertia",
+                "liquidbounce",
+                "sigma",
+                "future",
+                "kami",
+                "rusherhack",
+                "phobos",
+                "seppuku",
+                "wwe",
+                "pyro",
+                "konas",
+                "gamesense",
+                "salhack"
+            );
+        }
+
+        public class Engine extends ConfigurationPart {
+            @Comment(
+                "Papyrus integrated anticheat engine. Detects x-ray heuristics, fast place/break, inventory spam,\n" +
+                "hand swapping, reach, movement, and packet timers. Players with papyrus.anticheat.bypass are ignored."
+            )
+            public boolean enabled = true;
+
+            public Alerts alerts;
+            public Punishments punishments;
+            public Checks checks;
+
+            public class Alerts extends ConfigurationPart {
+                public boolean enabled = true;
+                public boolean console = true;
+                public boolean notifyOps = false;
+            }
+
+            public class Punishments extends ConfigurationPart {
+                public boolean kickEnabled = true;
+                public float kickViolationLevel = 40.0F;
+                public Component kickMessage = Component.text("Unfair advantage detected");
+                @Comment("Violation level removed per second when the player stops triggering checks.")
+                public float violationDecayPerSecond = 2.0F;
+            }
+
+            public class Checks extends ConfigurationPart {
+                public Xray xray;
+                public RateLimit fastPlace = new RateLimit(12, 4.0F);
+                public RateLimit fastBreak = new RateLimit(8, 4.0F);
+                public Inventory inventory;
+                public HandSwap handSwap;
+                public Reach reach;
+                public Movement movement;
+                public Timer timer;
+
+                public class Xray extends ConfigurationPart {
+                    public boolean enabled = true;
+                    @Comment("Seconds to track ore mining patterns.")
+                    public int windowSeconds = 300;
+                    @Comment("Ore breaks in the window before flagging suspicious mining speed.")
+                    public int suspiciousOreCount = 14;
+                    @Comment("Minimum ores before ore-to-stone ratio is evaluated.")
+                    public int minOresForRatioCheck = 6;
+                    @Comment("Maximum allowed ore-to-common-block ratio in the tracking window.")
+                    public float maxOreToStoneRatio = 0.35F;
+                    public float violationWeight = 8.0F;
+                    @Comment("Minecraft block ids counted as valuable ores for x-ray heuristics.")
+                    public java.util.List<String> trackedOres = java.util.List.of(
+                        "minecraft:diamond_ore",
+                        "minecraft:deepslate_diamond_ore",
+                        "minecraft:emerald_ore",
+                        "minecraft:deepslate_emerald_ore",
+                        "minecraft:ancient_debris",
+                        "minecraft:gold_ore",
+                        "minecraft:deepslate_gold_ore",
+                        "minecraft:nether_gold_ore",
+                        "minecraft:lapis_ore",
+                        "minecraft:deepslate_lapis_ore",
+                        "minecraft:redstone_ore",
+                        "minecraft:deepslate_redstone_ore"
+                    );
+                    public transient java.util.Set<net.minecraft.world.level.block.Block> resolvedOres = java.util.Set.of();
+
+                    @PostProcess
+                    void resolveOres() {
+                        final java.util.Set<net.minecraft.world.level.block.Block> blocks = new java.util.HashSet<>();
+                        for (final String id : this.trackedOres) {
+                            final net.minecraft.resources.Identifier identifier = net.minecraft.resources.Identifier.tryParse(id);
+                            if (identifier == null) {
+                                LOGGER.warn("Ignoring invalid anticheat xray ore id '{}'", id);
+                                continue;
+                            }
+                            final net.minecraft.world.level.block.Block block = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(identifier);
+                            if (block == null || block == net.minecraft.world.level.block.Blocks.AIR) {
+                                LOGGER.warn("Unknown anticheat xray ore block '{}'", id);
+                                continue;
+                            }
+                            blocks.add(block);
+                        }
+                        this.resolvedOres = java.util.Set.copyOf(blocks);
+                        io.papermc.paper.anticheat.PapyrusAnticheat.bindTrackedOres(this.resolvedOres);
+                    }
+                }
+
+                public class RateLimit extends ConfigurationPart {
+                    public boolean enabled = true;
+                    public int maxPerSecond = 12;
+                    public float violationWeight = 4.0F;
+                    public boolean cancelAction = true;
+
+                    public RateLimit() {
+                    }
+
+                    public RateLimit(final int maxPerSecond, final float violationWeight) {
+                        this.maxPerSecond = maxPerSecond;
+                        this.violationWeight = violationWeight;
+                    }
+                }
+
+                public class Inventory extends ConfigurationPart {
+                    public boolean enabled = true;
+                    public int maxClicksPerSecond = 25;
+                    public float violationWeight = 3.0F;
+                    public boolean cancelAction = true;
+                }
+
+                public class HandSwap extends ConfigurationPart {
+                    public boolean enabled = true;
+                    public int maxSwapsPerSecond = 8;
+                    public float violationWeight = 3.0F;
+                    public boolean cancelAction = true;
+                }
+
+                public class Reach extends ConfigurationPart {
+                    public boolean enabled = true;
+                    @Comment("Extra block reach tolerance beyond the player's interaction range.")
+                    public double blockExtraDistance = 0.35;
+                    public float violationWeight = 10.0F;
+                }
+
+                public class Movement extends ConfigurationPart {
+                    public boolean enabled = true;
+                    public double maxHorizontalBlocksPerTick = 0.85;
+                    public double maxVerticalBlocksPerTick = 1.2;
+                    public double leniencyMultiplier = 1.15;
+                    public float violationWeight = 5.0F;
+                    public boolean setback = true;
+                }
+
+                public class Timer extends ConfigurationPart {
+                    public boolean enabled = true;
+                    public int maxPacketsPerSecond = 140;
+                    public float violationWeight = 6.0F;
+                }
+            }
+        }
 
         public class Obfuscation extends ConfigurationPart {
             public Items items;

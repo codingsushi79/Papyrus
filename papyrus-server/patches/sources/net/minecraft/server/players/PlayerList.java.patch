@@ -139,6 +139,7 @@
 +        }
 +        // CraftBukkit end
 +
++        io.papermc.paper.anticheat.client.ClientIntegrityHandler.onPlayerJoin(player); // Papyrus - client integrity
 +        // CraftBukkit start - sendAll above replaced with this loop
 +        ClientboundPlayerInfoUpdatePacket packet = ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(List.of(player)); // Paper - Add Listing API for Player
 +
@@ -305,6 +306,8 @@
 +
 +        org.bukkit.event.player.PlayerQuitEvent playerQuitEvent = new org.bukkit.event.player.PlayerQuitEvent(player.getBukkitEntity(), leaveMessage, player.quitReason); // Paper - Adventure & Add API for quit reason
 +        this.cserver.getPluginManager().callEvent(playerQuitEvent);
++        io.papermc.paper.anticheat.PapyrusAnticheat.onPlayerQuit(player); // Papyrus - anticheat
++        io.papermc.paper.anticheat.client.ClientIntegrityHandler.onPlayerQuit(player); // Papyrus - client integrity
 +        player.getBukkitEntity().disconnect();
 +
 +        // CraftBukkit end
