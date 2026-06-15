@@ -13,7 +13,8 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  server:
+    name: Build Papyrus server (26.1.2)
     runs-on: ubuntu-latest
     env:
       ORG_GRADLE_PROJECT_org.gradle.configuration-cache: false
@@ -52,22 +53,144 @@ jobs:
       - name: Upload Server Jar
         uses: actions/upload-artifact@v4
         with:
-          name: papyrus-server
+          name: papyrus-server-26.1.2
           path: papyrus-server/build/distributions/papyrus-paperclip-*.jar
 
-      - name: Prepare release jar
+      - name: Prepare release server jar
         if: startsWith(github.ref, 'refs/tags/v')
-        id: release-jar
         run: |
           MC_VERSION=$(grep '^mcVersion=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
           SOURCE=(papyrus-server/build/distributions/papyrus-paperclip-*.jar)
-          RELEASE_JAR="Papyrus-${MC_VERSION}.jar"
-          cp "${SOURCE[0]}" "${RELEASE_JAR}"
-          echo "path=${RELEASE_JAR}" >> "$GITHUB_OUTPUT"
+          cp "${SOURCE[0]}" "Papyrus-${MC_VERSION}.jar"
 
-      - name: Upload to GitHub Release
+      - name: Upload release server jar
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+        uses: actions/upload-artifact@v4
         with:
-          files: ${{ steps.release-jar.outputs.path }}
+          name: papyrus-release-server
+          path: Papyrus-*.jar
+
+  client-mod:
+    name: Build papyrus-shield (${{ matrix.mc }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        # Keep in sync with SUPPORTED_VERSIONS.txt and Papyrus-Client
+        include:
+          - mc: '1.21.1'
+            project: mod
+            yarn: '1.21.1+build.3'
+            loader: '0.16.14'
+            fabric: '0.116.4+1.21.1'
+            java: '21'
+          - mc: '1.21.4'
+            project: mod
+            yarn: '1.21.4+build.8'
+            loader: '0.16.14'
+            fabric: '0.119.2+1.21.4'
+            java: '21'
+          - mc: '1.21.8'
+            project: mod
+            yarn: '1.21.8+build.1'
+            loader: '0.16.14'
+            fabric: '0.136.1+1.21.8'
+            java: '21'
+          - mc: '1.21.10'
+            project: mod
+            yarn: '1.21.10+build.3'
+            loader: '0.18.1'
+            fabric: '0.138.3+1.21.10'
+            java: '21'
+          - mc: '1.21.11'
+            project: mod
+            yarn: '1.21.11+build.6'
+            loader: '0.18.1'
+            fabric: '0.141.4+1.21.11'
+            java: '21'
+          - mc: '26.1.2'
+            project: mod-unobf
+            yarn: ''
+            loader: '0.18.4'
+            fabric: '0.152.1+26.1.2'
+            java: '25'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: codingsushi79/Papyrus-Client
+          ref: main
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build papyrus-shield (${{ matrix.mc }})
+        working-directory: ${{ matrix.project }}
+        run: |
+          MOD_VERSION="${{ github.ref_type == 'tag' && github.ref_name || 'dev-SNAPSHOT' }}"
+          if [ "${{ matrix.project }}" = "mod" ]; then
+            cat > gradle.properties <<EOF
+          org.gradle.jvmargs=-Xmx2G
+          minecraft_version=${{ matrix.mc }}
+          yarn_mappings=${{ matrix.yarn }}
+          loader_version=${{ matrix.loader }}
+          fabric_version=${{ matrix.fabric }}
+          mod_version=${MOD_VERSION}
+          maven_group=dev.sushimc.papyrus
+          archives_base_name=papyrus-shield
+          EOF
+          else
+            cat > gradle.properties <<EOF
+          org.gradle.jvmargs=-Xmx2G
+          minecraft_version=${{ matrix.mc }}
+          loader_version=${{ matrix.loader }}
+          fabric_version=${{ matrix.fabric }}
+          mod_version=${MOD_VERSION}
+          maven_group=dev.sushimc.papyrus
+          archives_base_name=papyrus-shield
+          EOF
+          fi
+          gradle wrapper --gradle-version 9.5
+          ./gradlew build --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: papyrus-shield-${{ matrix.mc }}
+          path: ${{ matrix.project }}/build/libs/papyrus-shield-${{ matrix.mc }}-*.jar
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [server, client-mod]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          find artifacts -type f -name 'Papyrus-*.jar' -exec cp {} release/ \;
+          find artifacts -type f -name 'papyrus-shield-*-*.jar' -exec cp {} release/ \;
+          EXPECTED_MODS=$(grep -v '^#' SUPPORTED_VERSIONS.txt | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
+          echo "Release files:"
+          ls -la release/
+          test "$(find release -maxdepth 1 -name 'Papyrus-*.jar' | wc -l | tr -d ' ')" -eq 1
+          test "$(find release -maxdepth 1 -name 'papyrus-shield-*-*.jar' | wc -l | tr -d ' ')" -eq "$EXPECTED_MODS"
+      - name: Remove stale release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release view "$tag" --json assets -q '.assets[].id' | while read -r id; do
+              gh api -X DELETE "repos/${{ github.repository }}/releases/assets/${id}" || true
+            done
+          fi
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          overwrite_files: true
           fail_on_unmatched_files: true
