@@ -363,6 +363,11 @@ public class GlobalConfiguration extends ConfigurationPart {
         public Engine engine;
         public ClientIntegrity clientIntegrity;
 
+        @PostProcess
+        void publishAnticheatSettings() {
+            io.papermc.paper.configuration.AnticheatSettingsBridge.apply(GlobalConfiguration.this);
+        }
+
         public class ClientIntegrity extends ConfigurationPart {
             @Comment(
                 "Requires Papyrus Client / papyrus-shield mod to report installed Fabric mods.\n" +

@@ -1,7 +1,7 @@
 package io.papermc.paper.anticheat;
 
 import com.mojang.logging.LogUtils;
-import io.papermc.paper.configuration.GlobalConfiguration;
+import io.papermc.paper.anticheat.AnticheatSettings;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -38,7 +38,7 @@ public final class PapyrusAnticheat {
         if (!isActive(player)) {
             return;
         }
-        final GlobalConfiguration.Anticheat.Engine.Checks.Timer timer = config().checks.timer;
+        final AnticheatSettings.Timer timer = config().checks.timer;
         if (!timer.enabled) {
             return;
         }
@@ -64,7 +64,7 @@ public final class PapyrusAnticheat {
         if (!isActive(player)) {
             return;
         }
-        final GlobalConfiguration.Anticheat.Engine.Checks checkConfig = config().checks;
+        final AnticheatSettings.Checks checkConfig = config().checks;
         final AnticheatPlayerState playerState = state(player);
 
         if (checkConfig.fastBreak.enabled) {
@@ -125,7 +125,7 @@ public final class PapyrusAnticheat {
             return true;
         }
         onIncomingPacket(player);
-        final GlobalConfiguration.Anticheat.Engine.Checks.Inventory inventory = config().checks.inventory;
+        final AnticheatSettings.Inventory inventory = config().checks.inventory;
         if (!inventory.enabled) {
             return true;
         }
@@ -143,7 +143,7 @@ public final class PapyrusAnticheat {
             return true;
         }
         onIncomingPacket(player);
-        final GlobalConfiguration.Anticheat.Engine.Checks.HandSwap handSwap = config().checks.handSwap;
+        final AnticheatSettings.HandSwap handSwap = config().checks.handSwap;
         if (!handSwap.enabled) {
             return true;
         }
@@ -160,7 +160,7 @@ public final class PapyrusAnticheat {
         if (!isActive(player)) {
             return;
         }
-        final GlobalConfiguration.Anticheat.Engine.Checks.Movement movement = config().checks.movement;
+        final AnticheatSettings.Movement movement = config().checks.movement;
         if (!movement.enabled || player.isCreative() || player.isSpectator()) {
             return;
         }
@@ -211,7 +211,7 @@ public final class PapyrusAnticheat {
         final AnticheatPlayerState playerState = state(player);
         playerState.decayViolations();
         final float projectedLevel = playerState.violationLevel() + weight;
-        final GlobalConfiguration.Anticheat.Engine engine = config();
+        final AnticheatSettings.Engine engine = config();
 
         final io.papermc.paper.event.player.PlayerAnticheatViolationEvent event =
             new io.papermc.paper.event.player.PlayerAnticheatViolationEvent(
@@ -237,7 +237,7 @@ public final class PapyrusAnticheat {
             }
         }
 
-        final GlobalConfiguration.Anticheat.Engine.Punishments punishments = engine.punishments;
+        final AnticheatSettings.Punishments punishments = engine.punishments;
         if (punishments.kickEnabled && level >= punishments.kickViolationLevel) {
             player.connection.disconnect(punishments.kickMessage, PlayerKickEvent.Cause.ILLEGAL_ACTION);
             STATES.remove(player.getUUID());
@@ -254,13 +254,12 @@ public final class PapyrusAnticheat {
         return STATES.computeIfAbsent(player.getUUID(), id -> new AnticheatPlayerState(player));
     }
 
-    private static GlobalConfiguration.Anticheat.Engine config() {
-        return GlobalConfiguration.get().anticheat.engine;
+    private static AnticheatSettings.Engine config() {
+        return AnticheatSettings.ENGINE;
     }
 
     private static boolean isActive(final ServerPlayer player) {
-        final GlobalConfiguration configuration = GlobalConfiguration.get();
-        if (configuration == null || !configuration.anticheat.engine.enabled) {
+        if (!AnticheatSettings.ENGINE.enabled) {
             return false;
         }
         return !player.getBukkitEntity().hasPermission("papyrus.anticheat.bypass");

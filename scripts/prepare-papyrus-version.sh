@@ -53,12 +53,19 @@ fi
 
 git checkout "$PAPYRUS_SOURCE_REF" -- settings.gradle.kts scripts/start.sh SUPPORTED_VERSIONS.txt .github/workflows/build.yml
 
-PAPYRUS_PATHS=(
+PAPYRUS_COMMON_PATHS=(
   papyrus-api/build.gradle.kts
   papyrus-api/src/main/java/io/papermc/paper/ServerBuildInfo.java
   papyrus-api/src/main/java/io/papermc/paper/event/player/PlayerAnticheatViolationEvent.java
   papyrus-api/src/main/javadoc/overview.html
   papyrus-server/src/main/java/io/papermc/paper/anticheat
+  papyrus-server/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+  papyrus-server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+  test-plugin/build.gradle.kts
+  test-plugin/src/main/resources/paper-plugin.yml
+)
+
+PAPYRUS_MAIN_ONLY_PATHS=(
   papyrus-server/src/main/java/io/papermc/paper/util/EntityRandomSources.java
   papyrus-server/src/main/java/io/papermc/paper/util/PapyrusPerformance.java
   papyrus-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V32_EntityRandomSource.java
@@ -66,16 +73,16 @@ PAPYRUS_PATHS=(
   papyrus-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V34_PapyrusAnticheatEngine.java
   papyrus-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V35_PapyrusClientIntegrity.java
   papyrus-server/src/main/java/io/papermc/paper/configuration/transformation/world/versioned/V32_ExperienceOrbOptions.java
-  papyrus-server/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
-  papyrus-server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
+  papyrus-server/src/main/java/io/papermc/paper/configuration/AnticheatSettingsBridge.java
   papyrus-server/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
   papyrus-server/src/main/java/io/papermc/paper/configuration/PaperConfigurations.java
   papyrus-server/src/main/java/io/papermc/paper/configuration/WorldConfiguration.java
-  test-plugin/build.gradle.kts
-  test-plugin/src/main/resources/paper-plugin.yml
 )
 
-git checkout "$PAPYRUS_SOURCE_REF" -- "${PAPYRUS_PATHS[@]}"
+git checkout "$PAPYRUS_SOURCE_REF" -- "${PAPYRUS_COMMON_PATHS[@]}"
+if [[ "$MC_VERSION" == "26.1.2" ]]; then
+  git checkout "$PAPYRUS_SOURCE_REF" -- "${PAPYRUS_MAIN_ONLY_PATHS[@]}"
+fi
 git checkout "$PAPYRUS_SOURCE_REF" -- scripts/prepare-papyrus-version.sh scripts/apply-papyrus-hooks.py
 
 python3 scripts/apply-papyrus-hooks.py
@@ -83,6 +90,7 @@ python3 scripts/apply-papyrus-hooks.py
 rm -f paper-server
 ln -s papyrus-server paper-server
 
+if [[ "$MC_VERSION" == "26.1.2" ]]; then
 python3 - <<'PY'
 from pathlib import Path
 
@@ -95,6 +103,7 @@ if old in text:
 elif new not in text:
     raise SystemExit("Could not apply PapyrusPerformance hook in Main.java")
 PY
+fi
 
 python3 - <<'PY'
 from pathlib import Path

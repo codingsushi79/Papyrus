@@ -93,7 +93,7 @@ final class AnticheatPlayerState {
 
     void decayViolations() {
         final long now = System.currentTimeMillis();
-        final float decayPerSecond = io.papermc.paper.configuration.GlobalConfiguration.get().anticheat.engine.punishments.violationDecayPerSecond;
+        final float decayPerSecond = AnticheatSettings.ENGINE.punishments.violationDecayPerSecond;
         if (decayPerSecond <= 0F) {
             this.lastViolationDecayMillis = now;
             return;

@@ -3,8 +3,7 @@ package io.papermc.paper.anticheat.client;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mojang.logging.LogUtils;
-import io.papermc.paper.configuration.GlobalConfiguration;
+import io.papermc.paper.anticheat.AnticheatSettings;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Locale;
@@ -31,7 +30,7 @@ public final class ClientIntegrityHandler {
     }
 
     public static void onPlayerJoin(final ServerPlayer player) {
-        final GlobalConfiguration.Anticheat.ClientIntegrity config = config();
+        final AnticheatSettings.ClientIntegrity config = config();
         if (!config.enabled || player.getBukkitEntity().hasPermission("papyrus.client.bypass")) {
             return;
         }
@@ -60,7 +59,7 @@ public final class ClientIntegrityHandler {
     }
 
     private static void processReport(final ServerPlayer player, final String json) {
-        final GlobalConfiguration.Anticheat.ClientIntegrity config = config();
+        final AnticheatSettings.ClientIntegrity config = config();
         if (!config.enabled) {
             return;
         }
@@ -120,7 +119,7 @@ public final class ClientIntegrityHandler {
     }
 
     private static void rejectMissing(final ServerPlayer player) {
-        final GlobalConfiguration.Anticheat.ClientIntegrity config = config();
+        final AnticheatSettings.ClientIntegrity config = config();
         final Component message = Component.text()
             .append(Component.text("This server requires ", NamedTextColor.RED))
             .append(Component.text("Papyrus Client", NamedTextColor.GOLD))
@@ -137,8 +136,8 @@ public final class ClientIntegrityHandler {
         ));
     }
 
-    private static GlobalConfiguration.Anticheat.ClientIntegrity config() {
-        return GlobalConfiguration.get().anticheat.clientIntegrity;
+    private static AnticheatSettings.ClientIntegrity config() {
+        return AnticheatSettings.CLIENT_INTEGRITY;
     }
 
     private record PendingCheck(long startedAtMillis) {
