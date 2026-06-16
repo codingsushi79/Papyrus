@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 2
       matrix:
         include:
           - mc: '26.1.2'
@@ -61,7 +61,13 @@ jobs:
         run: |
           git config --global user.email "no-reply@github.com"
           git config --global user.name "GitHub Actions"
-          ./gradlew applyPatches --stacktrace --no-build-cache
+          for attempt in 1 2 3; do
+            ./gradlew applyPatches --stacktrace --no-build-cache && break
+            if [ "$attempt" -eq 3 ]; then exit 1; fi
+            echo "applyPatches failed (attempt $attempt), retrying after cache clean..."
+            rm -rf ~/.gradle/caches/paperweight ~/.gradle/caches/modules-2/files-2.1/com.mojang 2>/dev/null || true
+            sleep 15
+          done
           ./gradlew build syncPapyrusPaperclipJar --stacktrace --no-build-cache
 
       - name: Upload Test Results

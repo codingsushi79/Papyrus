@@ -51,7 +51,7 @@ if [[ -d paper-generator ]]; then
   fi
 fi
 
-git checkout "$PAPYRUS_SOURCE_REF" -- settings.gradle.kts scripts/start.sh SUPPORTED_VERSIONS.txt
+git checkout "$PAPYRUS_SOURCE_REF" -- settings.gradle.kts scripts/start.sh SUPPORTED_VERSIONS.txt .github/workflows/build.yml
 
 PAPYRUS_PATHS=(
   papyrus-api/build.gradle.kts
