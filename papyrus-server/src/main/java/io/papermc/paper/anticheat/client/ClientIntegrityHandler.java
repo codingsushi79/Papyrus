@@ -3,6 +3,7 @@ package io.papermc.paper.anticheat.client;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.logging.LogUtils;
 import io.papermc.paper.anticheat.AnticheatSettings;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
