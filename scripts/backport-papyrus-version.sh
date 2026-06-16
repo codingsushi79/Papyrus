@@ -74,14 +74,7 @@ PATCH_FILES=(
   net/minecraft/world/entity/ExperienceOrb.java.patch
 )
 
-for patch_file in "${PATCH_FILES[@]}"; do
-  main_patch="$(mktemp)"
-  git show "main:papyrus-server/patches/sources/${patch_file}" > "$main_patch"
-  python3 scripts/merge-papyrus-patch-hooks.py \
-    "$main_patch" \
-    "papyrus-server/patches/sources/${patch_file}"
-  rm -f "$main_patch"
-done
+python3 scripts/apply-papyrus-hooks.py
 
 rm -f paper-server
 ln -s papyrus-server paper-server
