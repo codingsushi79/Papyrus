@@ -20,15 +20,20 @@ fi
 echo "==> Backporting Papyrus to ${MC_VERSION} from ${REF}"
 
 git checkout -B "$BRANCH" "$REF"
+git reset --hard
+git clean -fd
 git checkout main -- scripts/backport-papyrus-version.sh scripts/merge-papyrus-patch-hooks.py
 
-if [[ -d paper-api && ! -d papyrus-api ]]; then
+# Remove leftover mache/build dirs so paper-* renames are not skipped.
+rm -rf papyrus-server papyrus-api papyrus-generator 2>/dev/null || true
+
+if [[ -d paper-api ]]; then
   git mv paper-api papyrus-api
 fi
-if [[ -d paper-server && ! -d papyrus-server ]]; then
+if [[ -d paper-server ]]; then
   git mv paper-server papyrus-server
 fi
-if [[ -d paper-generator && ! -d papyrus-generator ]]; then
+if [[ -d paper-generator ]]; then
   git mv paper-generator papyrus-generator
   if [[ -f paper-generator.settings.gradle.kts && ! -f papyrus-generator.settings.gradle.kts ]]; then
     git mv paper-generator.settings.gradle.kts papyrus-generator.settings.gradle.kts
