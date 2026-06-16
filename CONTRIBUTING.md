@@ -1,18 +1,13 @@
-Contributing to Paper
+Contributing to Papyrus
 ==========================
-PaperMC is happy you're willing to contribute to our projects. We are usually
-very lenient with all submitted PRs, but there are still some guidelines you
-can follow to make the approval process go more smoothly.
+
+Papyrus inherits Paper's patch-based workflow. We welcome PRs against [codingsushi79/Papyrus](https://github.com/codingsushi79/Papyrus).
+
+Documentation for Papyrus-specific configuration: [docs.sushii.dev/papyrus](https://docs.sushii.dev/papyrus/)
 
 ## Use a Personal Fork and not an Organization
 
-Paper will routinely modify your PR, whether it's a quick rebase or to take care
-of any minor nitpicks we might have. Often, it's better for us to solve these
-problems for you than make you go back and forth trying to fix them yourself.
-
-Unfortunately, if you use an organization for your PR, it prevents Paper from
-modifying it. To avoid this, please do not use repositories on organizations
-for PRs.
+Maintainers may modify your PR (rebase, minor fixes). Organization-owned forks block those edits — use a personal fork for pull requests.
 
 ## Requirements
 
@@ -21,12 +16,12 @@ which can be obtained in (most) package managers such as `apt` (Debian / Ubuntu;
 you will most likely use this for WSL), `homebrew` (macOS / Linux), and more:
 
 - `git` (package `git` everywhere);
-- A Java 21 or later JDK (packages vary, use Google/DuckDuckGo/etc.).
+- A Java 25 or later JDK (packages vary, use Google/DuckDuckGo/etc.).
   - [Adoptium](https://adoptium.net/) has builds for most operating systems.
-  - Paper requires JDK 21 to build, however, makes use of Gradle's
+  - Papyrus requires JDK 25 to build, however, makes use of Gradle's
     [Toolchains](https://docs.gradle.org/current/userguide/toolchains.html)
-    feature to allow building with only JRE 17 or later installed. (Gradle will
-    automatically provision JDK 21 for compilation if it cannot find an existing
+    feature to allow building with only JRE 21 or later installed. (Gradle will
+    automatically provision JDK 25 for compilation if it cannot find an existing
     installation).
 
 If you're on Windows, check
@@ -36,11 +31,11 @@ If you're compiling with Docker, you can use Adoptium's
 [`eclipse-temurin`](https://hub.docker.com/_/eclipse-temurin/) images like so:
 
 ```console
-# docker run -it -v "$(pwd)":/data --rm eclipse-temurin:21.0.5_11-jdk bash
+# docker run -it -v "$(pwd)":/data --rm eclipse-temurin:25.0.2_10-jdk bash
 Pulling image...
 
 root@abcdefg1234:/# javac -version
-javac 21.0.5
+javac 25.0.2
 ```
 
 ## Understanding Patches
@@ -62,11 +57,11 @@ Assuming you have already forked the repository:
 1. Clone your fork to your local machine;
 2. Type `./gradlew applyPatches` in a terminal to apply the patches.
 On Windows, remove the `./` the beginning of `gradlew` commands;
-3. cd into `paper-server` for server changes, and `paper-api` for API changes.
-**Only changes made in `paper-server/src/minecraft` have to deal with the patch system.**
+3. cd into `papyrus-server` for server changes, and `papyrus-api` for API changes.
+**Only changes made in `papyrus-server/src/minecraft` have to deal with the patch system.**
 
-`paper-server/src/minecraft` is not a git repositories in the traditional sense. Its
-initial commits are the decompiled and deobfuscated Minecraft source files. The per-file
+`papyrus-server/src/minecraft` is not a git repositories in the traditional sense. Its
+initial commits are the decompiled Minecraft source files. The per-file
 patches are applied on top of these files as a single, large commit, which is then followed
 by the individual feature-patch commits.
 
@@ -88,7 +83,7 @@ edit it using `git rebase`.
 0. If you have changes you are working on, type `git stash` to store them for
    later;
     - You can type `git stash pop` to get them back at any point.
-1. cd into `paper-server/src/minecraft/java` and run `git rebase -i base`;
+1. cd into `papyrus-server/src/minecraft/java` and run `git rebase -i base`;
     - It should show something like
       [this](https://gist.github.com/zachbr/21e92993cb99f62ffd7905d7b02f3159) in
       the text editor you get.
@@ -115,7 +110,7 @@ since we can temporarily drop these patches and reapply them later.
 There is only a very small chance that you will have to use this system, but adding
 such patches is very simple:
 
-1. Modify `paper-server/src/minecraft` with the appropriate changes;
+1. Modify `papyrus-server/src/minecraft` with the appropriate changes;
 1. Run `git add .` inside that directory to add your changes;
 1. Run `git commit` with the desired patch message;
 1. Run `./gradlew rebuildPatches` in the root directory.
@@ -184,8 +179,7 @@ These steps assume the `origin` remote is your fork of this repository and `upst
 ## PR Policy
 
 We'll accept changes that make sense. You should be able to justify their
-existence, along with any maintenance costs that come with them. Using
-[obfuscation helpers](#obfuscation-helpers) aids in the maintenance costs.
+existence, along with any maintenance costs that come with them.
 Remember that these changes will affect everyone who runs Paper, not just you
 and your server.
 
@@ -281,7 +275,7 @@ public class SomeVanillaClass {
 
 We are in the process of switching nullability annotation libraries, so you might need to use one or the other:
 
-**For classes we add**: Fields, method parameters and return types that are nullable should be marked via the
+**For classes, we add or modifications to Vanilla Files**: Fields, method parameters and return types that are nullable should be marked via the
 `@Nullable` annotation from `org.jspecify.annotations`. Whenever you create a new class, add `@NullMarked`, meaning types
 are assumed to be non-null by default. For less obvious placing such as on generics or arrays, see the [JSpecify docs](https://jspecify.dev/docs/user-guide/).
 
@@ -382,26 +376,6 @@ index a92bf8967..d0ab87d0f 100644
 ```
 -->
 
-## Obfuscation Helpers
-
-While rarely needed, obfuscation helpers are sometimes useful when it comes
-to unmapped local variables, or poorly named method parameters. In an effort
-to make future updates easier on ourselves, Paper tries to use obfuscation
-helpers wherever it makes sense. The purpose of these helpers is to make the
-code more readable and maintainable. These helpers should be made easy to
-inline by the JVM wherever possible.
-
-An example of an obfuscation helper for a local variable:
-```java
-double d0 = entity.getX(); final double fromX = d0; // Paper - OBFHELPER
-// ...   
-this.someMethod(fromX); // Paper
-```
-
-While they may not always be done in exactly the same way, the general goal is
-always to improve readability and maintainability. Use your best judgment and do
-what fits best in your situation.
-
 ## Configuration files
 
 To use a configurable value in your patch, add a new field in either the
@@ -441,26 +415,27 @@ int maxPlayers = GlobalConfiguration.get().misc.maxNumOfPlayers;
 Generally for global config values you will use the fully qualified class name,
 `io.papermc.paper.configuration.GlobalConfiguration` since it's not imported in
 most places.
----
+
 If you are adding a new world config value, you must have access to an instance
 of the `net.minecraft.world.level.Level` which you can then access the config by doing
 ```java
 int maxPlayers = level.paperConfig().misc.maxNumOfPlayers;
 ```
 
+#### Documentation
+When adding or removing a config option, document it in [docs.sushii.dev/papyrus](https://docs.sushii.dev/papyrus/) (Papyrus-specific options) and/or upstream [PaperMC/docs](https://github.com/PaperMC/docs) if the change applies to Paper as well. Bump the config version in `GlobalConfiguration` or `WorldConfiguration` and add a migration class under `configuration/versions/` when changing defaults or adding keys.
+
 ## Testing API changes
 
-### Using the Paper Test Plugin
+### Using the test plugin
 
-The Paper project has a `test-plugin` module for easily testing out API changes
-and additions. To use the test plugin, enable it in `test-plugin.settings.gradle.kts`,
-which will be generated after running Gradle at least once. After this, you can edit
-the test plugin, and run a server with the plugin using `./gradlew runDev` (or any
-of the other Paper run tasks).
+The repository includes a `test-plugin` module for testing API changes. Enable it in `test-plugin.settings.gradle.kts` (generated after the first Gradle run), then run `./gradlew runDev`.
+
+Gradle project names are `:paper-api` and `:paper-server`; source lives in `papyrus-api/` and `papyrus-server/`. A `paper-server` symlink points at `papyrus-server/` for Paperweight — do not remove it.
 
 ### Publishing to Maven local (use in external plugins)
 
-To build and install the Paper APIs and Server to your local Maven repository, do the following:
+To build and install the API to your local Maven repository (published as `io.papermc.paper:paper-api`):
 
 - Run `./gradlew publishToMavenLocal` in the base directory.
 
@@ -491,10 +466,13 @@ If you use Maven to build your plugin:
 
 ### My commit doesn't need a build, what do I do?
 
-Quite simple: You add `[ci skip]` to the start of your commit subject.
+Quite simple: You add `[ci skip]` to the start of your pull request title.
 
 This case most often applies to changes to files like `README.md`, this very
-file (`CONTRIBUTING.md`), the `LICENSE.md` file, and so forth.
+file (`CONTRIBUTING.md`), the `LICENSE.md` file, and also small updates to Javadocs or other documentation.
+
+Do *not* add [ci skip] to the start of your individual commit subjects, as your
+pull request will not be mergeable until a new commit is added due to status check requirements.
 
 ### Patching and building is *really* slow, what can I do?
 
