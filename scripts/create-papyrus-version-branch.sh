@@ -35,6 +35,6 @@ EOF
 )"
 fi
 
-git push -u origin "$BRANCH"
+git push -u origin "$BRANCH" --force-with-lease
 git checkout main
 echo "==> ${BRANCH} pushed"
