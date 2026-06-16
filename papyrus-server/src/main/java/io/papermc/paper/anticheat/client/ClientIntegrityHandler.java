@@ -15,15 +15,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.network.protocol.common.custom.DiscardedPayload;
-import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import org.bukkit.NamespacedKey;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.slf4j.Logger;
 
 public final class ClientIntegrityHandler {
 
-    public static final Identifier CHANNEL = Identifier.fromNamespaceAndPath("papyrus", "integrity");
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<UUID, PendingCheck> PENDING = new ConcurrentHashMap<>();
 
@@ -50,7 +50,7 @@ public final class ClientIntegrityHandler {
         if (!(payload instanceof DiscardedPayload discarded)) {
             return false;
         }
-        if (!CHANNEL.equals(discarded.id())) {
+        if (!integrityChannel().equals(discarded.id())) {
             return false;
         }
         final ServerPlayer player = connection.player;
@@ -133,12 +133,20 @@ public final class ClientIntegrityHandler {
     private static void sendRequest(final ServerPlayer player) {
         final byte[] payload = "{\"action\":\"request\"}".getBytes(StandardCharsets.UTF_8);
         player.connection.send(new net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket(
-            new DiscardedPayload(CHANNEL, payload)
+            new DiscardedPayload(CraftNamespacedKey.toMinecraft(integrityKey()), payload)
         ));
     }
 
     private static AnticheatSettings.ClientIntegrity config() {
         return AnticheatSettings.CLIENT_INTEGRITY;
+    }
+
+    private static Object integrityChannel() {
+        return CraftNamespacedKey.toMinecraft(integrityKey());
+    }
+
+    private static NamespacedKey integrityKey() {
+        return new NamespacedKey("papyrus", "integrity");
     }
 
     private record PendingCheck(long startedAtMillis) {

@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Set;
 import net.kyori.adventure.text.Component;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 
 /**
  * Runtime anticheat settings. On current Paper/Papyrus releases these are copied from
@@ -41,14 +41,12 @@ public final class AnticheatSettings {
             "minecraft:redstone_ore",
             "minecraft:deepslate_redstone_ore"
         )) {
-            final Identifier identifier = Identifier.tryParse(id);
-            if (identifier == null) {
-                continue;
-            }
-            final Block block = BuiltInRegistries.BLOCK.getValue(identifier);
-            if (block != null && block != Blocks.AIR) {
-                blocks.add(block);
-            }
+            final var key = CraftNamespacedKey.toMinecraft(CraftNamespacedKey.fromString(id));
+            BuiltInRegistries.BLOCK.getOptional(key).ifPresent(block -> {
+                if (block != Blocks.AIR) {
+                    blocks.add(block);
+                }
+            });
         }
         PapyrusAnticheat.bindTrackedOres(Set.copyOf(blocks));
     }
