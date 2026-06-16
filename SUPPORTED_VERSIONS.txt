@@ -1,9 +1,9 @@
 # Supported Minecraft versions for Papyrus server jar builds.
 # Each version is a full Papyrus build (anticheat, branding, config options).
+# 1.21.1 is omitted: upstream Paper has no modern paperweight source for that release.
 
 26.1.2
 1.21.11
 1.21.10
 1.21.8
 1.21.4
-1.21.1

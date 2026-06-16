@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 5
       matrix:
         include:
           - mc: '26.1.2'
@@ -35,9 +35,6 @@ jobs:
             java: '21'
           - mc: '1.21.4'
             ref: 'papyrus/1.21.4'
-            java: '21'
-          - mc: '1.21.1'
-            ref: 'papyrus/1.21.1'
             java: '21'
     env:
       ORG_GRADLE_PROJECT_org.gradle.configuration-cache: false
