@@ -2,13 +2,12 @@
 
 ## Supported Versions
 
-We generally only fully support the latest version, the same applies to exploits such as server crashes and item
-duplication bugs. In the transition period during larger Minecraft updates, we may still backport important fixes to the
-last minor or major release.
+We generally only fully support the latest release. The same applies to exploits such as server crashes and item duplication bugs.
 
 ## Reporting a Vulnerability
 
-For any issues that are NOT duplication bugs, server/client crashes, or otherwise serious exploits, please open an issue
-through the [Issues tab](https://github.com/PaperMC/Paper/issues).
-For exploits, please [join our Discord](https://discord.gg/papermc) and see the [#paper-exploit-report channel](https://discord.com/channels/289587909051416579/1208749386348101682) for
-further instructions.
+For serious exploits (duplication bugs, remote code execution, server/client crashes), open a **private** security advisory or contact the maintainers through [GitHub Issues](https://github.com/codingsushi79/Papyrus/issues) with minimal public detail until a fix is available.
+
+For non-critical bugs, use the [Issues tab](https://github.com/codingsushi79/Papyrus/issues) on this repository.
+
+If the issue also affects upstream Paper and is not Papyrus-specific, you may report it to [PaperMC](https://github.com/PaperMC/Paper/issues) as well.
