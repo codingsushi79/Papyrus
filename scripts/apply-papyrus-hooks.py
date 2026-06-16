@@ -6,7 +6,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Each rule: match consecutive lines in patch file, insert `lines` after the match block.
+# Each rule: match consecutive lines in patch file, then either:
+# - insert `lines` after the match block (insert_at, default len(match)), or
+# - replace the match block with `replace` when provided.
 RULES: dict[str, list[dict]] = {
     "net/minecraft/server/players/PlayerList.java.patch": [
         {
@@ -200,33 +202,85 @@ RULES: dict[str, list[dict]] = {
     "net/minecraft/world/entity/ExperienceOrb.java.patch": [
         {
             "match": [
+                "             if (this.age >= 6000) {",
                 "-                this.discard();",
+                "+                this.discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause",
             ],
-            "insert_at": 0,
-            "lines": [
+            "replace": [
                 "+            if (this.age >= level().paperConfig().environment.experienceOrbDespawnRate) { // Papyrus - configurable orb despawn rate",
+                "+                this.discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause",
             ],
-            "suffix_after": "+                this.discard();",
         },
         {
             "match": [
-                "-            Player nearestPlayer = this.level().getNearestPlayer(this, 8.0);",
+                "-            if (this.age >= 6000) {",
+                "-                this.discard();",
             ],
-            "insert_at": 1,
-            "lines": [
+            "replace": [
+                "+            if (this.age >= level().paperConfig().environment.experienceOrbDespawnRate) { // Papyrus - configurable orb despawn rate",
+                "+                this.discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause",
+            ],
+        },
+        {
+            "match": [
+                "             Player nearestPlayer = this.level().getNearestPlayer(this, 8.0);",
+            ],
+            "replace": [
                 "+            Player nearestPlayer = this.level().getNearestPlayer(this, this.level().paperConfig().environment.experienceOrbPickupRadius); // Papyrus - configurable pickup radius",
             ],
         },
         {
             "match": [
-                "     private void tryMerge(final ExperienceOrb other) {",
+                "-            Player nearestPlayer = this.level().getNearestPlayer(this, 8.0);",
             ],
-            "insert_at": 1,
-            "lines": [
+            "replace": [
+                "+            Player nearestPlayer = this.level().getNearestPlayer(this, this.level().paperConfig().environment.experienceOrbPickupRadius); // Papyrus - configurable pickup radius",
+            ],
+        },
+        {
+            "match": [
+                "     private static boolean tryMergeToExisting(ServerLevel level, Vec3 pos, int amount) {",
+                "         AABB aabb = AABB.ofSize(pos, 1.0, 1.0, 1.0);",
+            ],
+            "replace": [
+                "     private static boolean tryMergeToExisting(ServerLevel level, Vec3 pos, int amount) {",
                 "+        if (level.paperConfig().entities.behavior.disableExperienceOrbMerge) { // Papyrus - optional orb merge disable",
-                "+            return;",
+                "+            return false;",
                 "+        }",
+                "+        // Paper - TODO some other event for this kind of merge",
                 "+        final double mergeRadius = level.paperConfig().entities.spawning.experienceOrbMergeRadius; // Papyrus - configurable merge radius",
+                "+        AABB aabb = AABB.ofSize(pos, mergeRadius, mergeRadius, mergeRadius);",
+            ],
+        },
+        {
+            "match": [
+                "     private static boolean tryMergeToExisting(ServerLevel level, Vec3 pos, int amount) {",
+                "+        // Paper - TODO some other event for this kind of merge",
+                "         AABB aabb = AABB.ofSize(pos, 1.0, 1.0, 1.0);",
+            ],
+            "replace": [
+                "     private static boolean tryMergeToExisting(ServerLevel level, Vec3 pos, int amount) {",
+                "+        if (level.paperConfig().entities.behavior.disableExperienceOrbMerge) { // Papyrus - optional orb merge disable",
+                "+            return false;",
+                "+        }",
+                "+        // Paper - TODO some other event for this kind of merge",
+                "+        final double mergeRadius = level.paperConfig().entities.spawning.experienceOrbMergeRadius; // Papyrus - configurable merge radius",
+                "+        AABB aabb = AABB.ofSize(pos, mergeRadius, mergeRadius, mergeRadius);",
+            ],
+        },
+        {
+            "match": [
+                "     private static boolean tryMergeToExisting(final ServerLevel level, final Vec3 pos, final int value) {",
+                "-        AABB box = AABB.ofSize(pos, 1.0, 1.0, 1.0);",
+            ],
+            "replace": [
+                "     private static boolean tryMergeToExisting(final ServerLevel level, final Vec3 pos, final int value) {",
+                "+        if (level.paperConfig().entities.behavior.disableExperienceOrbMerge) { // Papyrus - optional orb merge disable",
+                "+            return false;",
+                "+        }",
+                "+        // Paper - TODO some other event for this kind of merge",
+                "+        final double mergeRadius = level.paperConfig().entities.spawning.experienceOrbMergeRadius; // Papyrus - configurable merge radius",
+                "+        AABB box = AABB.ofSize(pos, mergeRadius, mergeRadius, mergeRadius);",
             ],
         },
     ],
@@ -245,6 +299,17 @@ def find_sequence(lines: list[str], match: list[str], prefix_before: str | None 
     return None
 
 
+def already_applied(lines: list[str], rule: dict) -> bool:
+    markers = rule.get("skip_if_present", [])
+    if markers:
+        text = "\n".join(lines)
+        return any(marker in text for marker in markers)
+    insert_lines = rule.get("lines", [])
+    replace_lines = rule.get("replace", [])
+    candidates = insert_lines + replace_lines
+    return any(line in lines for line in candidates if "Papyrus" in line or "io.papermc.paper.anticheat" in line)
+
+
 def apply_rules(path: Path) -> bool:
     rel = str(path.relative_to(path.parents[2])) if path.parts[-4:-1] == ("papyrus-server", "patches", "sources") else path.name
     # rel like net/minecraft/...
@@ -257,20 +322,28 @@ def apply_rules(path: Path) -> bool:
     changed = False
     for rule in rules:
         match = rule["match"]
-        insert_lines = rule["lines"]
+        if already_applied(lines, rule):
+            continue
         idx = find_sequence(lines, match, rule.get("prefix_before"))
         if idx is None:
-            print(f"WARNING: anchor not found in {rel}: {match[0]!r}", file=sys.stderr)
+            if not rule.get("optional"):
+                print(f"WARNING: anchor not found in {rel}: {match[0]!r}", file=sys.stderr)
+            continue
+
+        if "replace" in rule:
+            replace_lines = rule["replace"]
+            del lines[idx : idx + len(match)]
+            for offset, line in enumerate(replace_lines):
+                lines.insert(idx + offset, line)
+            changed = True
+            continue
+
+        insert_lines = rule.get("lines", [])
+        if not insert_lines:
             continue
         insert_at = idx + rule.get("insert_at", len(match))
         block = "\n".join(insert_lines)
         if block in "\n".join(lines):
-            continue
-        if any(
-            line in lines
-            for line in insert_lines
-            if "Papyrus" in line or "io.papermc.paper.anticheat" in line
-        ):
             continue
         for offset, line in enumerate(insert_lines):
             lines.insert(insert_at + offset, line)
