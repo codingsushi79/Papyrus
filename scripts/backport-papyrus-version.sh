@@ -78,7 +78,9 @@ for patch_file in "${PATCH_FILES[@]}"; do
   rm -f "$main_patch"
 done
 
-git checkout main -- paper-server
+rm -f paper-server
+ln -s papyrus-server paper-server
+git add -f paper-server
 
 python3 - <<'PY'
 from pathlib import Path
