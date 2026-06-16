@@ -20,6 +20,7 @@ fi
 echo "==> Backporting Papyrus to ${MC_VERSION} from ${REF}"
 
 git checkout -B "$BRANCH" "$REF"
+git checkout main -- scripts/backport-papyrus-version.sh scripts/merge-papyrus-patch-hooks.py
 
 if [[ -d paper-api && ! -d papyrus-api ]]; then
   git mv paper-api papyrus-api
