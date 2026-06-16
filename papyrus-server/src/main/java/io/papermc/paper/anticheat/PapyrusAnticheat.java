@@ -189,7 +189,7 @@ public final class PapyrusAnticheat {
         final ViolationType type,
         final String context
     ) {
-        if (!target.isFinite()) {
+        if (!Double.isFinite(target.x) || !Double.isFinite(target.y) || !Double.isFinite(target.z)) {
             flag(player, ViolationType.INVALID_PACKET, config().checks.reach.violationWeight, context + " invalid-hit-vector");
             return false;
         }
