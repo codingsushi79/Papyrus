@@ -265,7 +265,11 @@ def apply_rules(path: Path) -> bool:
         block = "\n".join(insert_lines)
         if block in "\n".join(lines):
             continue
-        if any(line in lines for line in insert_lines):
+        if any(
+            line in lines
+            for line in insert_lines
+            if "Papyrus" in line or "io.papermc.paper.anticheat" in line
+        ):
             continue
         for offset, line in enumerate(insert_lines):
             lines.insert(insert_at + offset, line)
