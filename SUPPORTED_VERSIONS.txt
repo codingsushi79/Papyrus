@@ -1,5 +1,5 @@
 # Supported Minecraft versions for Papyrus server jar builds.
-# All versions are built from the main branch; older MC versions are prepared at CI time.
+# 26.1.2 builds from main; 1.21.x builds from papyrus/<version> branches.
 # 1.21.1 is omitted: upstream Paper has no modern paperweight source for that release.
 
 26.1.2

@@ -50,6 +50,23 @@ RULES: dict[str, list[dict]] = {
                 "+",
             ],
         },
+        {
+            "match": [
+                "+                // Paper end - Trigger bee_nest_destroyed trigger in the correct place",
+                "+",
+                "+                return true;",
+                "+                // CraftBukkit end",
+            ],
+            "insert_at": 4,
+            "lines": [
+                "+        // Papyrus start - integrated anticheat",
+                "+        if (flag && block != null) {",
+                "+            io.papermc.paper.anticheat.PapyrusAnticheat.onBlockBroken(this.player, block);",
+                "+        }",
+                "+        // Papyrus end - integrated anticheat",
+                "+",
+            ],
+        },
     ],
     "net/minecraft/server/network/ServerGamePacketListenerImpl.java.patch": [
         {
@@ -207,6 +224,8 @@ RULES: dict[str, list[dict]] = {
                 "+                this.discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause",
             ],
             "replace": [
+                "-             if (this.age >= 6000) {",
+                "-                this.discard();",
                 "+            if (this.age >= level().paperConfig().environment.experienceOrbDespawnRate) { // Papyrus - configurable orb despawn rate",
                 "+                this.discard(org.bukkit.event.entity.EntityRemoveEvent.Cause.DESPAWN); // CraftBukkit - add Bukkit remove cause",
             ],
@@ -226,6 +245,7 @@ RULES: dict[str, list[dict]] = {
                 "             Player nearestPlayer = this.level().getNearestPlayer(this, 8.0);",
             ],
             "replace": [
+                "-             Player nearestPlayer = this.level().getNearestPlayer(this, 8.0);",
                 "+            Player nearestPlayer = this.level().getNearestPlayer(this, this.level().paperConfig().environment.experienceOrbPickupRadius); // Papyrus - configurable pickup radius",
             ],
         },
@@ -249,6 +269,7 @@ RULES: dict[str, list[dict]] = {
                 "+        }",
                 "+        // Paper - TODO some other event for this kind of merge",
                 "+        final double mergeRadius = level.paperConfig().entities.spawning.experienceOrbMergeRadius; // Papyrus - configurable merge radius",
+                "-         AABB aabb = AABB.ofSize(pos, 1.0, 1.0, 1.0);",
                 "+        AABB aabb = AABB.ofSize(pos, mergeRadius, mergeRadius, mergeRadius);",
             ],
         },
@@ -265,6 +286,7 @@ RULES: dict[str, list[dict]] = {
                 "+        }",
                 "+        // Paper - TODO some other event for this kind of merge",
                 "+        final double mergeRadius = level.paperConfig().entities.spawning.experienceOrbMergeRadius; // Papyrus - configurable merge radius",
+                "-         AABB aabb = AABB.ofSize(pos, 1.0, 1.0, 1.0);",
                 "+        AABB aabb = AABB.ofSize(pos, mergeRadius, mergeRadius, mergeRadius);",
             ],
         },
