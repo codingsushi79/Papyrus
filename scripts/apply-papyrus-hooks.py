@@ -57,7 +57,7 @@ RULES: dict[str, list[dict]] = {
                 "+                return true;",
                 "+                // CraftBukkit end",
             ],
-            "insert_at": 4,
+            "insert_at": 2,
             "lines": [
                 "+        // Papyrus start - integrated anticheat",
                 "+        if (flag && block != null) {",
