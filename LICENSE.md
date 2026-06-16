@@ -1,6 +1,6 @@
-Paper inherits its licensing from the included upstream projects.
+Papyrus by SushiMC inherits its licensing from Paper and the included upstream projects.
 
-As such, Paper is licensed under the
+As such, Papyrus is licensed under the
 [GNU General Public License version 3](licenses/GPL.md); as it inherits it from Spigot,
 who in turn inherits it from the original Bukkit and CraftBukkit projects.
 
@@ -65,4 +65,6 @@ aerulion <aerulion@gmail.com>
 Lukas Planz <lukas.planz@web.de>
 granny <contact@granny.dev>
 mja00 <me@mja00.dev>
+roro1506HD <16260475+roro1506HD@users.noreply.github.com>
+Toffikk <slodkitofik@gmail.com>
 ```
