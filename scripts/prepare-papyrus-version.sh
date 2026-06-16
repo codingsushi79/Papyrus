@@ -14,6 +14,16 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if ! git rev-parse --verify "$PAPER_REF" >/dev/null 2>&1; then
+  if git remote get-url paper >/dev/null 2>&1; then
+    git fetch --depth 1 paper "refs/tags/${PAPER_REF}:refs/tags/${PAPER_REF}" 2>/dev/null || \
+      git fetch --depth 1 paper "tag ${PAPER_REF}" 2>/dev/null || true
+  fi
+fi
+if ! git rev-parse --verify "$PAPER_REF" >/dev/null 2>&1; then
+  echo "==> Fetching Paper tag ${PAPER_REF} from PaperMC/Paper"
+  git fetch --depth 1 https://github.com/PaperMC/Paper.git "refs/tags/${PAPER_REF}:refs/tags/${PAPER_REF}"
+fi
+if ! git rev-parse --verify "$PAPER_REF" >/dev/null 2>&1; then
   echo "Unknown Paper ref: $PAPER_REF" >&2
   exit 1
 fi
