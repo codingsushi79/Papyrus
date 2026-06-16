@@ -60,7 +60,8 @@ jobs:
         run: |
           git config --global user.email "no-reply@github.com"
           git config --global user.name "GitHub Actions"
-          ./gradlew applyPatches build syncPapyrusPaperclipJar --stacktrace --no-build-cache
+          ./gradlew applyPatches --stacktrace --no-build-cache
+          ./gradlew build syncPapyrusPaperclipJar --stacktrace --no-build-cache
 
       - name: Upload Test Results
         if: always() && matrix.mc == '26.1.2'

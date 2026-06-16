@@ -140,6 +140,12 @@ sed -i '' \
   -e "s/^apiVersion=.*/apiVersion=${MC_VERSION}/" \
   gradle.properties
 
+if ! rg -q '^channel=' gradle.properties; then
+  printf '\nchannel=STABLE\n' >> gradle.properties
+else
+  sed -i '' 's/^channel=.*/channel=STABLE/' gradle.properties
+fi
+
 git checkout main -- README.md LICENSE.md CONTRIBUTING.md SECURITY.md .editorconfig .gitignore
 
 git add -A
