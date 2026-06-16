@@ -1,143 +1,126 @@
-# Here lie dragons!
-#
-# This action either builds the server or
-# builds a paperclip jar to be updated in the body
-# of the PR relating to this action.
+name: Build Papyrus
 
-name: Build Paper
 on:
   push:
+    branches:
+      - main
+      - 'papyrus/*'
+    tags:
+      - 'v*'
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - labeled
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    env:
-      ORG_GRADLE_PROJECT_paperBuildCacheEnabled: true
-      ORG_GRADLE_PROJECT_paperBuildCacheUsername: ${{ secrets.PAPER_BUILD_CACHE_USERNAME }}
-      ORG_GRADLE_PROJECT_paperBuildCachePassword: ${{ secrets.PAPER_BUILD_CACHE_PASSWORD }}
-      ORG_GRADLE_PROJECT_paperBuildCachePush: true
-
-    # The goal of the build workflow is split into multiple requirements.
-    # 1. Run on pushes to same repo.
-    # 2. Run on PR open/reopen/syncs from repos that are not the same (PRs from the same repo are covered by 1)
-    # 3. Run on labeled PRs that have the publish-pr flag.
-    if: >
-      (
-        (github.event_name == 'push')
-        || (github.event_name == 'pull_request' && github.repository != github.event.pull_request.head.repo.full_name && contains(fromJSON('["opened", "reopened", "synchronize"]'), github.event.action))
-        || (github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.label.name == 'publish-pr')
-      )
-
+  server:
+    name: Build Papyrus (${{ matrix.mc }})
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - mc: '26.1.2'
+            ref: 'main'
+            java: '25'
+          - mc: '1.21.11'
+            ref: 'papyrus/1.21.11'
+            java: '21'
+          - mc: '1.21.10'
+            ref: 'papyrus/1.21.10'
+            java: '21'
+          - mc: '1.21.8'
+            ref: 'papyrus/1.21.8'
+            java: '21'
+          - mc: '1.21.4'
+            ref: 'papyrus/1.21.4'
+            java: '21'
+    env:
+      ORG_GRADLE_PROJECT_org.gradle.configuration-cache: false
     steps:
-      - if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          # todo remove me again after the update
-          ref: ${{ github.ref_name }}
+          ref: ${{ matrix.ref }}
           fetch-depth: 0
-      - if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-      - name: JDK 21
+
+      - name: JDK ${{ matrix.java }}
         uses: actions/setup-java@v4
         with:
-          java-version: 21
-          distribution: 'zulu'
+          java-version: ${{ matrix.java }}
+          distribution: zulu
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          # Allow cache writes on main and dev branches
-          cache-read-only: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/dev/') }}
+          cache-disabled: true
+          gradle-home-cache-enabled: false
 
-      - name: Configure Build
-        uses: actions/github-script@v7
-        id: determine
-        env:
-          REF_NAME: "${{ github.ref_name }}"
-          REF_TYPE: "${{ github.ref_type }}"
-          EVENT: "${{ toJSON(github.event) }}"
-          EVENT_TYPE: "${{ github.event_name }}"
-        with:
-          script: |
-            const {owner, repo} = context.repo;
-            const event_name = `${process.env.EVENT_TYPE}`;
-            const event = JSON.parse(`${process.env.EVENT}`);
-            const ref_type = `${process.env.REF_TYPE}`;
-            const ref_name = `${process.env.REF_NAME}`;
-            const result = {
-              action: "build"
-            };
-
-            if (event_name === "push" && ref_type === "branch") {
-              const {data: pulls} = await github.rest.pulls.list({ owner, repo, head: `${owner}:${ref_name}`, state: "open" });
-              const pull = pulls.find((pr) => !!pr.labels.find((l) => l.name === "publish-pr"));
-              if (pull) {
-                result["pr"] = pull.number;
-                result["action"] = "paperclip";
-                core.notice(`This is a push action but to a branch with an open PR with the build paperclip label (${JSON.stringify(result)})`);
-                return result;
-              }
-            } else if (event_name === "pull_request" && event.pull_request.labels.find((l) => l.name === "publish-pr")) {
-              result["pr"] = event.pull_request.number;
-              result["action"] = "paperclip";
-              core.notice(`This is a pull request action with a build paperclip label (${JSON.stringify(result)})`);
-              return result;
-            }
-            core.notice("This will not build a paperclip jar");
-            return result;
-
-      - name: Apply Patches
+      - name: Apply Patches and Build
         run: |
           git config --global user.email "no-reply@github.com"
           git config --global user.name "GitHub Actions"
-          ./gradlew applyPatches --stacktrace
-
-      - name: Build
-        run: ./gradlew build --stacktrace
+          ./gradlew applyPatches --stacktrace --no-build-cache
+          ./gradlew build syncPapyrusPaperclipJar --stacktrace --no-build-cache
 
       - name: Upload Test Results
-        if: always()
+        if: always() && matrix.mc == '26.1.2'
         uses: actions/upload-artifact@v4
         with:
           name: Test Results
           path: |
             **/build/test-results/test/TEST-*.xml
 
-      - name: Create Paperclip Jar
-        if: fromJSON(steps.determine.outputs.result).action == 'paperclip'
-        run: ./gradlew createMojmapPaperclipJar --stacktrace
+      - name: Prepare release jar
+        run: |
+          SOURCE=(papyrus-server/build/distributions/papyrus-paperclip-*.jar)
+          if [ ! -f "${SOURCE[0]}" ]; then
+            echo "Expected jar not found: ${SOURCE[0]}"
+            ls -la papyrus-server/build/distributions/ 2>/dev/null || true
+            exit 1
+          fi
+          cp "${SOURCE[0]}" "Papyrus-${{ matrix.mc }}.jar"
+          ls -la "Papyrus-${{ matrix.mc }}.jar"
 
-      - name: Upload Paperclip Jar
-        if: fromJSON(steps.determine.outputs.result).action == 'paperclip'
+      - name: Upload Server Jar
         uses: actions/upload-artifact@v4
         with:
-          name: paper-${{ fromJSON(steps.determine.outputs.result).pr }}
-          path: paper-server/build/libs/paper-paperclip-*-mojmap.jar
+          name: papyrus-server-${{ matrix.mc }}
+          path: Papyrus-${{ matrix.mc }}.jar
 
-      - name: Publish Artifacts
-        if: fromJSON(steps.determine.outputs.result).action == 'paperclip'
-        uses: PaperMC/action-pr-publishing/upload@paper
-        with:
-          # TODO fallback for failing javadoc
-          publishing-task: ":paper-api:publishAllPublicationsTo_githubPackages_PRsRepository publishDevBundlePublicationTo_githubPackages_PRsRepository -PpublishDevBundle"
-  event_file:
-    name: "Event File"
-    # Only run on PRs if the source branch is on someone else's repo
-    if: ${{ github.event_name != 'pull_request' || github.repository != github.event.pull_request.head.repo.full_name }}
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: server
     runs-on: ubuntu-latest
     steps:
-      - name: Upload
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: Event File
-          path: ${{ github.event_path }}
+          pattern: papyrus-server-*
+          path: artifacts
+          merge-multiple: true
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          find artifacts -type f -name 'Papyrus-*.jar' -exec cp {} release/ \;
+          EXPECTED=$(grep -v '^#' SUPPORTED_VERSIONS.txt | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
+          echo "Release files:"
+          ls -la release/
+          test "$(find release -maxdepth 1 -name 'Papyrus-*.jar' | wc -l | tr -d ' ')" -eq "$EXPECTED"
+      - name: Remove stale release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release view "$tag" --json assets -q '.assets[].id' | while read -r id; do
+              gh api -X DELETE "repos/${{ github.repository }}/releases/assets/${id}" || true
+            done
+          fi
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          overwrite_files: true
+          fail_on_unmatched_files: true

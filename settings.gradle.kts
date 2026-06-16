@@ -13,31 +13,27 @@ if (!file(".git").exists()) {
     val errorText = """
         
         =====================[ ERROR ]=====================
-         The Paper project directory is not a properly cloned Git repository.
+         The Papyrus project directory is not a properly cloned Git repository.
          
-         In order to build Paper from source you must clone
-         the Paper repository using Git, not download a code
+         In order to build Papyrus from source you must clone
+         the repository using Git, not download a code
          zip from GitHub.
          
-         Built Paper jars are available for download at
-         https://papermc.io/downloads/paper
-         
-         See https://github.com/PaperMC/Paper/blob/main/CONTRIBUTING.md
-         for further information on building and modifying Paper.
+         See the README for build instructions.
         ===================================================
     """.trimIndent()
     error(errorText)
 }
 
-rootProject.name = "paper"
+rootProject.name = "papyrus"
 
-for (name in listOf("paper-api", "paper-server")) {
-    include(name)
-    file(name).mkdirs()
-}
+// paperweight hardcodes paper-server paths; use a paper-server -> papyrus-server symlink at repo root
+include("paper-api", "paper-server")
+project(":paper-api").projectDir = file("papyrus-api")
+project(":paper-server").projectDir = file("paper-server")
 
 optionalInclude("test-plugin")
-optionalInclude("paper-generator")
+optionalInclude("papyrus-generator")
 
 fun optionalInclude(name: String, op: (ProjectDescriptor.() -> Unit)? = null) {
     val settingsFile = file("$name.settings.gradle.kts")
@@ -53,6 +49,18 @@ fun optionalInclude(name: String, op: (ProjectDescriptor.() -> Unit)? = null) {
             """.trimIndent()
         )
     }
+}
+
+gradle.lifecycle.beforeProject {
+    val mcVersion = providers.gradleProperty("mcVersion").get().trim()
+    val paperVersionChannel = providers.gradleProperty("channel").get().trim()
+    val paperBuildNumber = providers.environmentVariable("BUILD_NUMBER").orNull?.trim()?.toInt()
+    val versionString = if (paperBuildNumber == null) {
+        "$mcVersion.local-SNAPSHOT"
+    } else {
+        "$mcVersion.build.$paperBuildNumber-${paperVersionChannel.lowercase()}"
+    }
+    version = versionString
 }
 
 if (providers.gradleProperty("paperBuildCacheEnabled").orNull.toBoolean()) {
