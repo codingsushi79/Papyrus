@@ -157,7 +157,7 @@ RULES: dict[str, list[dict]] = {
             ],
             "insert_at": 1,
             "lines": [
-                "+                                if (!io.papermc.paper.anticheat.PapyrusAnticheat.onUseItemOn(this.player, blockHit)) { // Papyrus - anticheat",
+                "+                                if (!io.papermc.paper.anticheat.PapyrusAnticheat.onUseItemOn(this.player, hitResult)) { // Papyrus - anticheat",
                 "+                                    return;",
                 "+                                }",
             ],
