@@ -22,26 +22,30 @@ jobs:
       matrix:
         include:
           - mc: '26.1.2'
-            ref: ''
+            paper_ref: ''
             java: '25'
+            prepare: false
           - mc: '1.21.11'
-            ref: 'papyrus/1.21.11'
+            paper_ref: '1.21.11'
             java: '21'
+            prepare: true
           - mc: '1.21.10'
-            ref: 'papyrus/1.21.10'
+            paper_ref: '1.21.10'
             java: '21'
+            prepare: true
           - mc: '1.21.8'
-            ref: 'papyrus/1.21.8'
+            paper_ref: '1.21.8'
             java: '21'
+            prepare: true
           - mc: '1.21.4'
-            ref: 'papyrus/1.21.4'
+            paper_ref: '1.21.4'
             java: '21'
+            prepare: true
     env:
       ORG_GRADLE_PROJECT_org.gradle.configuration-cache: false
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.ref != '' && matrix.ref || github.ref }}
           fetch-depth: 0
 
       - name: JDK ${{ matrix.java }}
@@ -49,6 +53,12 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution: zulu
+
+      - name: Prepare Papyrus tree
+        if: matrix.prepare
+        run: |
+          PAPYRUS_SOURCE="$(git rev-parse HEAD)"
+          ./scripts/prepare-papyrus-version.sh "${{ matrix.mc }}" "${{ matrix.paper_ref }}" "$PAPYRUS_SOURCE"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
