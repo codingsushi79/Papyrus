@@ -61,11 +61,30 @@ RULES: dict[str, list[dict]] = {
         },
         {
             "match": [
+                "     public void handleMovePlayer(ServerboundMovePlayerPacket packet) {",
+                "         PacketUtils.ensureRunningOnSameThread(packet, this, this.player.level());",
+            ],
+            "insert_at": 2,
+            "lines": [
+                "+        io.papermc.paper.anticheat.PapyrusAnticheat.onIncomingPacket(this.player); // Papyrus - anticheat packet budget",
+            ],
+        },
+        {
+            "match": [
                 "+                                zDist = targetZ - this.lastGoodZ; // Paper - diff on change, used for checking large move vectors above",
             ],
             "insert_at": 1,
             "lines": [
                 "+                                io.papermc.paper.anticheat.PapyrusAnticheat.onMovement(this.player, xDist, yDist, zDist, Math.max(1, this.receivedMovePacketCount - this.knownMovePacketCount)); // Papyrus - anticheat movement",
+            ],
+        },
+        {
+            "match": [
+                "+                                d5 = d2 - this.lastGoodZ; // Paper - diff on change, used for checking large move vectors above",
+            ],
+            "insert_at": 1,
+            "lines": [
+                "+                                io.papermc.paper.anticheat.PapyrusAnticheat.onMovement(this.player, d3, d4, d5, Math.max(1, this.receivedMovePacketCount - this.knownMovePacketCount)); // Papyrus - anticheat movement",
             ],
         },
         {
@@ -114,6 +133,17 @@ RULES: dict[str, list[dict]] = {
         },
         {
             "match": [
+                "+                            if (this.awaitingPositionFromClient == null && (serverLevel.mayInteract(this.player, blockPos) || (serverLevel.paperConfig().spawn.allowUsingSignsInsideSpawnProtection && serverLevel.getBlockState(blockPos).getBlock() instanceof net.minecraft.world.level.block.SignBlock))) { // Paper - Allow using signs inside spawn protection",
+            ],
+            "insert_at": 1,
+            "lines": [
+                "+                                if (!io.papermc.paper.anticheat.PapyrusAnticheat.onUseItemOn(this.player, blockHit)) { // Papyrus - anticheat",
+                "+                                    return;",
+                "+                                }",
+            ],
+        },
+        {
+            "match": [
                 "+        if (this.player.isImmobile()) return; // CraftBukkit",
             ],
             "insert_at": 1,
@@ -125,6 +155,17 @@ RULES: dict[str, list[dict]] = {
         {
             "match": [
                 "     public void handleCustomPayload(final ServerboundCustomPayloadPacket packet) {",
+            ],
+            "insert_at": 1,
+            "lines": [
+                "+        if (io.papermc.paper.anticheat.client.ClientIntegrityHandler.handlePayload(this, packet.payload())) {",
+                "+            return;",
+                "+        }",
+            ],
+        },
+        {
+            "match": [
+                "     public void handleCustomPayload(ServerboundCustomPayloadPacket packet) {",
             ],
             "insert_at": 1,
             "lines": [
@@ -223,6 +264,8 @@ def apply_rules(path: Path) -> bool:
         insert_at = idx + rule.get("insert_at", len(match))
         block = "\n".join(insert_lines)
         if block in "\n".join(lines):
+            continue
+        if any(line in lines for line in insert_lines):
             continue
         for offset, line in enumerate(insert_lines):
             lines.insert(insert_at + offset, line)
