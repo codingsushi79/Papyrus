@@ -34,10 +34,11 @@ RULES: dict[str, list[dict]] = {
     "net/minecraft/server/level/ServerPlayerGameMode.java.patch": [
         {
             "match": [
+                "+        // Paper end - Trigger bee_nest_destroyed trigger in the correct place",
                 "+        // CraftBukkit end",
                 "+",
             ],
-            "insert_at": 2,
+            "insert_at": 3,
             "lines": [
                 "+        // Papyrus start - integrated anticheat",
                 "+        if (changed && block != null) {",
