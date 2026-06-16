@@ -54,18 +54,18 @@ fi
 git checkout "$PAPYRUS_SOURCE_REF" -- settings.gradle.kts scripts/start.sh SUPPORTED_VERSIONS.txt .github/workflows/build.yml
 
 PAPYRUS_COMMON_PATHS=(
-  papyrus-api/build.gradle.kts
   papyrus-api/src/main/java/io/papermc/paper/ServerBuildInfo.java
   papyrus-api/src/main/java/io/papermc/paper/event/player/PlayerAnticheatViolationEvent.java
   papyrus-api/src/main/javadoc/overview.html
   papyrus-server/src/main/java/io/papermc/paper/anticheat
   papyrus-server/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
   papyrus-server/src/main/java/com/destroystokyo/paper/PaperVersionFetcher.java
-  test-plugin/build.gradle.kts
-  test-plugin/src/main/resources/paper-plugin.yml
 )
 
 PAPYRUS_MAIN_ONLY_PATHS=(
+  papyrus-api/build.gradle.kts
+  test-plugin/build.gradle.kts
+  test-plugin/src/main/resources/paper-plugin.yml
   papyrus-server/src/main/java/io/papermc/paper/util/EntityRandomSources.java
   papyrus-server/src/main/java/io/papermc/paper/util/PapyrusPerformance.java
   papyrus-server/src/main/java/io/papermc/paper/configuration/transformation/global/versioned/V32_EntityRandomSource.java
