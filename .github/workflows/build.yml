@@ -24,27 +24,21 @@ jobs:
           - mc: '26.1.2'
             ref: ''
             java: '25'
-            papyrus: true
           - mc: '1.21.11'
-            ref: '1.21.11'
+            ref: 'papyrus/1.21.11'
             java: '21'
-            papyrus: false
           - mc: '1.21.10'
-            ref: '1.21.10'
+            ref: 'papyrus/1.21.10'
             java: '21'
-            papyrus: false
           - mc: '1.21.8'
-            ref: '1.21.8'
+            ref: 'papyrus/1.21.8'
             java: '21'
-            papyrus: false
           - mc: '1.21.4'
-            ref: '1.21.4'
+            ref: 'papyrus/1.21.4'
             java: '21'
-            papyrus: false
           - mc: '1.21.1'
-            ref: 'ec79de82c'
+            ref: 'papyrus/1.21.1'
             java: '21'
-            papyrus: false
     env:
       ORG_GRADLE_PROJECT_org.gradle.configuration-cache: false
     steps:
@@ -69,15 +63,10 @@ jobs:
         run: |
           git config --global user.email "no-reply@github.com"
           git config --global user.name "GitHub Actions"
-          ./gradlew applyPatches --stacktrace --no-build-cache
-          if [ "${{ matrix.papyrus }}" = "true" ]; then
-            ./gradlew build createPaperclipJar syncPapyrusPaperclipJar --stacktrace --no-build-cache
-          else
-            ./gradlew build createMojmapPaperclipJar --stacktrace --no-build-cache
-          fi
+          ./gradlew applyPatches build syncPapyrusPaperclipJar --stacktrace --no-build-cache
 
       - name: Upload Test Results
-        if: always() && matrix.papyrus
+        if: always() && matrix.mc == '26.1.2'
         uses: actions/upload-artifact@v4
         with:
           name: Test Results
@@ -86,15 +75,10 @@ jobs:
 
       - name: Prepare release jar
         run: |
-          if [ "${{ matrix.papyrus }}" = "true" ]; then
-            SOURCE=(papyrus-server/build/distributions/papyrus-paperclip-*.jar)
-          else
-            SOURCE=(paper-server/build/libs/paper-paperclip-*-mojmap.jar)
-          fi
+          SOURCE=(papyrus-server/build/distributions/papyrus-paperclip-*.jar)
           if [ ! -f "${SOURCE[0]}" ]; then
             echo "Expected jar not found: ${SOURCE[0]}"
             ls -la papyrus-server/build/distributions/ 2>/dev/null || true
-            ls -la paper-server/build/libs/ 2>/dev/null || true
             exit 1
           fi
           cp "${SOURCE[0]}" "Papyrus-${{ matrix.mc }}.jar"

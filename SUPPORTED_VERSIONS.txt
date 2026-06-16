@@ -1,6 +1,5 @@
 # Supported Minecraft versions for Papyrus server jar builds.
-# 26.1.2 — full Papyrus tree (main / release tag): anticheat, branding, config options.
-# 1.21.x — built from upstream Paper commits in this repo; renamed to Papyrus-<mc>.jar.
+# Each version is a full Papyrus build (anticheat, branding, config options).
 
 26.1.2
 1.21.11
