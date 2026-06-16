@@ -17,13 +17,9 @@ PATCH_FILES=(
 
 for patch_file in "${PATCH_FILES[@]}"; do
   git show "${REF}:paper-server/patches/sources/${patch_file}" > "papyrus-server/patches/sources/${patch_file}"
-  main_patch="$(mktemp)"
-  git show "main:papyrus-server/patches/sources/${patch_file}" > "$main_patch"
-  python3 scripts/merge-papyrus-patch-hooks.py \
-    "$main_patch" \
-    "papyrus-server/patches/sources/${patch_file}"
-  rm -f "$main_patch"
 done
+
+python3 scripts/apply-papyrus-hooks.py
 
 git add papyrus-server/patches/sources/
 git commit -m "Fix Papyrus anticheat patch hook placement for Minecraft ${MC_VERSION}."
