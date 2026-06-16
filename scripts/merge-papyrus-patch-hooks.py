@@ -61,6 +61,17 @@ def line_body(line: str) -> str:
     return line
 
 
+def find_unique_anchor_index(result_lines: list[str], anchor: str) -> int | None:
+    matches = [
+        idx
+        for idx, target_line in enumerate(result_lines)
+        if line_body(target_line).rstrip() == anchor.rstrip()
+    ]
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
 def merge_patch(main_path: Path, target_path: Path) -> bool:
     main_content = main_path.read_text()
     target_content = target_path.read_text()
@@ -72,24 +83,22 @@ def merge_patch(main_path: Path, target_path: Path) -> bool:
         if block_text in target_content:
             continue
 
-        insert_at: int | None = None
-        if anchor is not None:
-            for idx, target_line in enumerate(result_lines):
-                if line_body(target_line).rstrip() == anchor.rstrip():
-                    insert_at = idx + 1
-                    while insert_at < len(result_lines) and line_body(result_lines[insert_at]).rstrip() in {
-                        b.rstrip() for b in block
-                    }:
-                        insert_at += 1
-                    break
-
-        if insert_at is None:
+        if anchor is None:
             print(
-                f"WARNING: could not locate anchor in {target_path.name}: {anchor!r}",
+                f"WARNING: missing anchor in {target_path.name} for block starting: {block[0]!r}",
                 file=sys.stderr,
             )
             continue
 
+        anchor_idx = find_unique_anchor_index(result_lines, anchor)
+        if anchor_idx is None:
+            print(
+                f"WARNING: anchor is missing or ambiguous in {target_path.name}: {anchor!r}",
+                file=sys.stderr,
+            )
+            continue
+
+        insert_at = anchor_idx + 1
         for offset, block_line in enumerate(block):
             prefixed = "+" + block_line
             if any(line_body(existing).rstrip() == block_line.rstrip() for existing in result_lines):
