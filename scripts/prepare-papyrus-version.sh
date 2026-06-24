@@ -87,9 +87,6 @@ git checkout "$PAPYRUS_SOURCE_REF" -- scripts/prepare-papyrus-version.sh scripts
 
 python3 scripts/apply-papyrus-hooks.py
 
-rm -f paper-server
-ln -s papyrus-server paper-server
-
 if [[ "$MC_VERSION" == "26.1.2" ]]; then
 python3 - <<'PY'
 from pathlib import Path

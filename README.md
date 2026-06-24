@@ -495,7 +495,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for patch workflow details (inherited fro
 Papyrus/
 ├── papyrus-api/          Public Bukkit/Paper plugin API (Gradle project :paper-api)
 ├── papyrus-server/       Server implementation (Gradle project :paper-server)
-├── paper-server/         Symlink → papyrus-server (required by Paperweight patch tooling)
 │   ├── patches/          Minecraft source patches (sources/, features/, resources/)
 │   └── src/main/java/    Papyrus/Paper Java code (io.papermc.paper.*)
 ├── build-data/           Access wideners and mapping data

@@ -431,7 +431,7 @@ When adding or removing a config option, document it in [docs.sushii.dev/papyrus
 
 The repository includes a `test-plugin` module for testing API changes. Enable it in `test-plugin.settings.gradle.kts` (generated after the first Gradle run), then run `./gradlew runDev`.
 
-Gradle project names are `:paper-api` and `:paper-server`; source lives in `papyrus-api/` and `papyrus-server/`. A `paper-server` symlink points at `papyrus-server/` for Paperweight — do not remove it.
+Gradle project names are `:paper-api` and `:paper-server`; source lives in `papyrus-api/` and `papyrus-server/` (see `settings.gradle.kts` `projectDir` mappings).
 
 ### Publishing to Maven local (use in external plugins)
 

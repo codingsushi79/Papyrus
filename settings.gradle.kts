@@ -27,10 +27,10 @@ if (!file(".git").exists()) {
 
 rootProject.name = "papyrus"
 
-// paperweight hardcodes paper-server paths; use a paper-server -> papyrus-server symlink at repo root
+// Gradle project :paper-server; physical sources live in papyrus-server/
 include("paper-api", "paper-server")
 project(":paper-api").projectDir = file("papyrus-api")
-project(":paper-server").projectDir = file("paper-server")
+project(":paper-server").projectDir = file("papyrus-server")
 
 optionalInclude("test-plugin")
 optionalInclude("papyrus-generator")
