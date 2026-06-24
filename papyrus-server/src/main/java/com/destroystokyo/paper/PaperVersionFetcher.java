@@ -40,8 +40,8 @@ public class PaperVersionFetcher implements VersionFetcher {
     private static final ComponentLogger COMPONENT_LOGGER = ComponentLogger.logger(LogManager.getRootLogger().getName());
     private static final int DISTANCE_ERROR = -1;
     private static final int DISTANCE_UNKNOWN = -2;
-    private static final String DOWNLOAD_PAGE = "https://papermc.io/downloads/paper";
-    private static final String REPOSITORY = "SushiMC/Papyrus";
+    private static final String DOWNLOAD_PAGE = "https://github.com/codingsushi79/Papyrus/releases";
+    private static final String REPOSITORY = "codingsushi79/Papyrus";
     private static final ServerBuildInfo BUILD_INFO = ServerBuildInfo.buildInfo();
     private static final String USER_AGENT = BUILD_INFO.brandName() + "/" + BUILD_INFO.asString(VERSION_SIMPLE) + " (Papyrus by SushiMC)";
     private static final Gson GSON = new Gson();
@@ -53,6 +53,16 @@ public class PaperVersionFetcher implements VersionFetcher {
 
     @Override
     public Component getVersionMessage() {
+        if (BUILD_INFO.brandId().equals(ServerBuildInfo.BRAND_PAPYRUS_ID)) {
+            final Component updateMessage;
+            if (BUILD_INFO.gitCommit().isEmpty()) {
+                updateMessage = text("You are running a development build without release update information", color(0xFF5300));
+            } else {
+                updateMessage = getPapyrusUpdateStatusMessage();
+            }
+            final @Nullable Component history = this.getHistory();
+            return history != null ? Component.textOfChildren(updateMessage, Component.newline(), history) : updateMessage;
+        }
         if (!BUILD_INFO.brandId().equals(ServerBuildInfo.BRAND_PAPER_ID)) {
             return text("Running " + BUILD_INFO.brandName() + " by SushiMC", NamedTextColor.GREEN);
         }
@@ -68,6 +78,12 @@ public class PaperVersionFetcher implements VersionFetcher {
     }
 
     public static void getUpdateStatusStartupMessage() {
+        if (BUILD_INFO.brandId().equals(ServerBuildInfo.BRAND_PAPYRUS_ID)) {
+            io.papermc.paper.util.PapyrusReleaseUpdater.checkAndUpdate(
+                io.papermc.paper.configuration.GlobalConfiguration.get().updateChecker.autoDownload
+            );
+            return;
+        }
         if (!BUILD_INFO.brandId().equals(ServerBuildInfo.BRAND_PAPER_ID)) {
             return;
         }
@@ -109,6 +125,32 @@ public class PaperVersionFetcher implements VersionFetcher {
                     }
                 }
             }
+        }
+    }
+
+    private static Component getPapyrusUpdateStatusMessage() {
+        try {
+            final Optional<io.papermc.paper.util.PapyrusReleaseUpdater.ReleaseAsset> latest =
+                io.papermc.paper.util.PapyrusReleaseUpdater.fetchLatestReleaseAsset(BUILD_INFO.minecraftVersionId());
+            final Optional<String> gitCommit = BUILD_INFO.gitCommit();
+            if (latest.isEmpty() || gitCommit.isEmpty()) {
+                return text("Running Papyrus by SushiMC", NamedTextColor.GREEN);
+            }
+
+            final int distance = io.papermc.paper.util.PapyrusReleaseUpdater.compareToRelease(gitCommit.get(), latest.get().tagName());
+            return switch (distance) {
+                case -1 -> text("Running Papyrus by SushiMC (update check failed)", NamedTextColor.YELLOW);
+                case 0 -> text("You are running the latest Papyrus release", NamedTextColor.GREEN);
+                default -> text("Papyrus release " + latest.get().tagName() + " is available (" + distance + " commit(s) newer)", NamedTextColor.YELLOW)
+                    .append(Component.newline())
+                    .append(text("Download at: ")
+                        .append(text(DOWNLOAD_PAGE, NamedTextColor.GOLD)
+                            .hoverEvent(text("Click to open", NamedTextColor.WHITE))
+                            .clickEvent(ClickEvent.openUrl(DOWNLOAD_PAGE))));
+            };
+        } catch (final IOException ex) {
+            LOGGER.debug("Failed to build Papyrus version message", ex);
+            return text("Running Papyrus by SushiMC", NamedTextColor.GREEN);
         }
     }
 

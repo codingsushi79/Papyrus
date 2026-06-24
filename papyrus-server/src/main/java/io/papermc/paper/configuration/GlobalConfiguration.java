@@ -585,7 +585,16 @@ public class GlobalConfiguration extends ConfigurationPart {
     public UpdateChecker updateChecker;
 
     public class UpdateChecker extends ConfigurationPart {
-        public boolean enabled = false;
+        @Comment(
+            "Check GitHub releases for a newer Papyrus build for this Minecraft version on startup."
+        )
+        public boolean enabled = true;
+
+        @Comment(
+            "Download newer releases automatically. Updates are written next to the running jar as *.update\n" +
+            "and applied on the next restart (scripts/start.sh applies them before launch)."
+        )
+        public boolean autoDownload = true;
     }
 
     public Performance performance;

@@ -131,6 +131,36 @@ Environment variables:
 |----------|---------|---------|
 | `JAVA` | `java` | Path to Java binary |
 | `JAR` | `papyrus-paperclip.jar` | Server jar filename |
+| `PAPYRUS_AUTO_UPDATE` | `1` | Set to `0` to skip pre-start GitHub release checks |
+
+### Auto-update
+
+Papyrus can keep itself up to date for the **same Minecraft version** using [GitHub Releases](https://github.com/codingsushi79/Papyrus/releases) (`Papyrus-<mcVersion>.jar` assets).
+
+**Recommended:** start the server with `scripts/start.sh`. On each launch it will:
+
+1. Apply a pending `*.update` jar downloaded earlier (backup saved as `*.backup`)
+2. Check GitHub for a newer release for this MC version and download it as `*.update` if needed
+3. Start the server — restart again to run the newly downloaded build
+
+While the server is running, Papyrus also checks releases on startup when enabled in config:
+
+```yaml
+# config/papyrus-global.yml
+update-checker:
+  enabled: true        # notify / check GitHub releases
+  auto-download: true  # download *.update next to the running jar
+```
+
+Set `PAPYRUS_AUTO_UPDATE=0` to disable the pre-start script check, or set `update-checker.enabled: false` to disable the in-server check.
+
+Manual update check:
+
+```bash
+./scripts/update-papyrus.sh papyrus-paperclip.jar
+```
+
+Requires `curl`, `jq`, and `unzip` for the shell updater.
 
 Edit `-Xms8G -Xmx8G` in the script to match your host. **Always set `-Xms` equal to `-Xmx`** to avoid heap resize pauses during gameplay.
 
