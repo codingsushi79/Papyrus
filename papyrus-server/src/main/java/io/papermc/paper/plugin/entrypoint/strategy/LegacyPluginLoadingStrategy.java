@@ -265,7 +265,7 @@ public class LegacyPluginLoadingStrategy<T> implements ProviderLoadingStrategy<T
 
     private void warnIfPaperPlugin(PluginProvider<T> provider) {
         if (provider instanceof PaperPluginParent.PaperServerPluginProvider) {
-            provider.getLogger().warn("Loading Paper plugin in the legacy plugin loading logic. This is not recommended and may introduce some differences into load order. It's highly recommended you move away from this if you are wanting to use Paper plugins.");
+            provider.getLogger().warn("Loading Papyrus plugin in the legacy plugin loading logic. This is not recommended and may introduce some differences into load order. It's highly recommended you move away from this if you are wanting to use Papyrus plugins.");
         }
     }
 }

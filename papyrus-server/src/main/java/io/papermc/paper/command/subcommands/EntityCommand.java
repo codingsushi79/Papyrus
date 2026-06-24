@@ -65,7 +65,7 @@ public final class EntityCommand implements PaperSubcommand {
     private void listEntities(final CommandSender sender, final String[] args) {
         // help
         if (args.length < 1 || !args[0].toLowerCase(Locale.ROOT).equals("list")) {
-            sender.sendMessage(text("Use /paper entity list [filter] [world] to get entity info that matches the optional filter.", RED));
+            sender.sendMessage(text("Use /papyrus entity list [filter] [world] to get entity info that matches the optional filter.", RED));
             return;
         }
 
@@ -79,8 +79,8 @@ public final class EntityCommand implements PaperSubcommand {
                 .filter(n -> n.toString().matches(cleanFilter))
                 .collect(Collectors.toSet());
             if (names.isEmpty()) {
-                sender.sendMessage(text("Invalid filter, does not match any entities. Use /paper entity list for a proper list", RED));
-                sender.sendMessage(text("Usage: /paper entity list [filter] [world]", RED));
+                sender.sendMessage(text("Invalid filter, does not match any entities. Use /papyrus entity list for a proper list", RED));
+                sender.sendMessage(text("Usage: /papyrus entity list [filter] [world]", RED));
                 return;
             }
 
@@ -90,7 +90,7 @@ public final class EntityCommand implements PaperSubcommand {
                 world = key == null ? null : sender.getServer().getWorld(key);
                 if (world == null) {
                     sender.sendMessage(text("Could not load world for " + args[2] + ". Please select a valid world.", RED));
-                    sender.sendMessage(text("Usage: /paper entity list [filter] [world]", RED));
+                    sender.sendMessage(text("Usage: /papyrus entity list [filter] [world]", RED));
                     return;
                 }
             } else if (sender instanceof Player player) {
@@ -98,7 +98,7 @@ public final class EntityCommand implements PaperSubcommand {
             } else {
                 sender.sendMessage(text("Please specify the key of a world", RED));
                 sender.sendMessage(text("To do so without a filter, specify '*' as the filter", RED));
-                sender.sendMessage(text("Usage: /paper entity list [filter] [world]", RED));
+                sender.sendMessage(text("Usage: /papyrus entity list [filter] [world]", RED));
                 return;
             }
 

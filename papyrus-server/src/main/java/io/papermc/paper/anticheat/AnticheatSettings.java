@@ -11,7 +11,7 @@ import org.bukkit.craftbukkit.util.CraftNamespacedKey;
 
 /**
  * Runtime anticheat settings. On current Paper/Papyrus releases these are copied from
- * {@code paper-global.yml}; on older backports the defaults below are used.
+ * {@code papyrus-global.yml}; on older backports the defaults below are used.
  */
 public final class AnticheatSettings {
 

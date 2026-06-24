@@ -96,9 +96,13 @@ import static io.leangen.geantyref.GenericTypeReflector.erase;
 public class PaperConfigurations extends Configurations<GlobalConfiguration, WorldConfiguration> {
 
     private static final Logger LOGGER = LogUtils.getClassLogger();
-    static final String GLOBAL_CONFIG_FILE_NAME = "paper-global.yml";
-    static final String WORLD_DEFAULTS_CONFIG_FILE_NAME = "paper-world-defaults.yml";
-    static final String WORLD_CONFIG_FILE_NAME = "paper-world.yml";
+    static final String GLOBAL_CONFIG_FILE_NAME = "papyrus-global.yml";
+    static final String WORLD_DEFAULTS_CONFIG_FILE_NAME = "papyrus-world-defaults.yml";
+    static final String WORLD_CONFIG_FILE_NAME = "papyrus-world.yml";
+    private static final String LEGACY_GLOBAL_CONFIG_FILE_NAME = "paper-global.yml";
+    private static final String LEGACY_WORLD_DEFAULTS_CONFIG_FILE_NAME = "paper-world-defaults.yml";
+    private static final String LEGACY_WORLD_CONFIG_FILE_NAME = "paper-world.yml";
+    private static final String LEGACY_ROOT_CONFIG_FILE_NAME = "paper.yml";
     public static final String CONFIG_DIR = "config";
     private static final String BACKUP_DIR ="legacy-backup";
 
@@ -145,7 +149,7 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
         the respective world folder.
 
         Papyrus documentation: https://docs.sushii.dev/papyrus/
-        Paper configuration reference: https://docs.papermc.io/paper/configuration
+        Upstream Paper configuration reference: https://docs.papermc.io/paper/configuration
         """;
 
     @VisibleForTesting
@@ -366,26 +370,28 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
     }
 
     public static PaperConfigurations setup(final Path legacyConfig, final Path configDir, final Path worldFolder, final File spigotConfig) throws Exception {
-        final Path legacy = Files.isSymbolicLink(legacyConfig) ? Files.readSymbolicLink(legacyConfig) : legacyConfig;
-        if (needsConverting(legacyConfig)) {
-            final String legacyFileName = legacyConfig.getFileName().toString();
+        final Path resolvedLegacyConfig = resolveLegacyConfigPath(legacyConfig);
+        migrateRenamedConfigFiles(configDir, worldFolder);
+        final Path legacy = Files.isSymbolicLink(resolvedLegacyConfig) ? Files.readSymbolicLink(resolvedLegacyConfig) : resolvedLegacyConfig;
+        if (needsConverting(resolvedLegacyConfig)) {
+            final String legacyFileName = resolvedLegacyConfig.getFileName().toString();
             try {
                 if (Files.exists(configDir) && !Files.isDirectory(configDir)) {
-                    throw new RuntimeException("Paper needs to create a '" + configDir.toAbsolutePath() + "' folder. You already have a non-directory named '" + configDir.toAbsolutePath() + "'. Please remove it and restart the server.");
+                    throw new RuntimeException("Papyrus needs to create a '" + configDir.toAbsolutePath() + "' folder. You already have a non-directory named '" + configDir.toAbsolutePath() + "'. Please remove it and restart the server.");
                 }
                 final Path backupDir = configDir.resolve(BACKUP_DIR);
                 if (Files.exists(backupDir) && !Files.isDirectory(backupDir)) {
-                    throw new RuntimeException("Paper needs to create a '" + BACKUP_DIR + "' directory in the '" + configDir.toAbsolutePath() + "' folder. You already have a non-directory named '" + BACKUP_DIR + "'. Please remove it and restart the server.");
+                    throw new RuntimeException("Papyrus needs to create a '" + BACKUP_DIR + "' directory in the '" + configDir.toAbsolutePath() + "' folder. You already have a non-directory named '" + BACKUP_DIR + "'. Please remove it and restart the server.");
                 }
                 createDirectoriesSymlinkAware(backupDir);
                 final String backupFileName = legacyFileName + ".old";
                 final Path legacyConfigBackup = backupDir.resolve(backupFileName);
                 if (Files.exists(legacyConfigBackup) && !Files.isRegularFile(legacyConfigBackup)) {
-                    throw new RuntimeException("Paper needs to create a '" + backupFileName + "' file in the '" + backupDir.toAbsolutePath() + "' folder. You already have a non-file named '" + backupFileName + "'. Please remove it and restart the server.");
+                    throw new RuntimeException("Papyrus needs to create a '" + backupFileName + "' file in the '" + backupDir.toAbsolutePath() + "' folder. You already have a non-file named '" + backupFileName + "'. Please remove it and restart the server.");
                 }
-                Files.move(legacyConfig.toRealPath(), legacyConfigBackup, StandardCopyOption.REPLACE_EXISTING); // make backup
-                if (Files.isSymbolicLink(legacyConfig)) {
-                    Files.delete(legacyConfig);
+                Files.move(resolvedLegacyConfig.toRealPath(), legacyConfigBackup, StandardCopyOption.REPLACE_EXISTING); // make backup
+                if (Files.isSymbolicLink(resolvedLegacyConfig)) {
+                    Files.delete(resolvedLegacyConfig);
                 }
                 final Path replacementFile = legacy.resolveSibling(legacyFileName + "-README.txt");
                 if (Files.notExists(replacementFile)) {
@@ -401,7 +407,7 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
             createDirectoriesSymlinkAware(configDir);
             return new PaperConfigurations(configDir);
         } catch (final IOException ex) {
-            throw new RuntimeException("Could not setup PaperConfigurations", ex);
+            throw new RuntimeException("Could not setup Papyrus configuration", ex);
         }
     }
 
@@ -483,6 +489,44 @@ public class PaperConfigurations extends Configurations<GlobalConfiguration, Wor
         ConfigurationOptions options = defaultGlobalOptions(registryAccess, defaultOptions(ConfigurationOptions.defaults()))
             .serializers(builder -> builder.register(type -> ConfigurationPart.class.isAssignableFrom(erase(type)), factory.asTypeSerializer()));
         return BasicConfigurationNode.root(options);
+    }
+
+    private static Path resolveLegacyConfigPath(final Path legacyConfig) {
+        if (needsConverting(legacyConfig)) {
+            return legacyConfig;
+        }
+        final Path legacyPaperConfig = legacyConfig.resolveSibling(LEGACY_ROOT_CONFIG_FILE_NAME);
+        if (needsConverting(legacyPaperConfig)) {
+            LOGGER.info("Migrating legacy {} to {}", LEGACY_ROOT_CONFIG_FILE_NAME, legacyConfig.getFileName());
+            return legacyPaperConfig;
+        }
+        return legacyConfig;
+    }
+
+    private static void migrateRenamedConfigFiles(final Path configDir, final Path worldFolder) throws IOException {
+        createDirectoriesSymlinkAware(configDir);
+        migrateConfigFileIfNeeded(configDir, LEGACY_GLOBAL_CONFIG_FILE_NAME, GLOBAL_CONFIG_FILE_NAME);
+        migrateConfigFileIfNeeded(configDir, LEGACY_WORLD_DEFAULTS_CONFIG_FILE_NAME, WORLD_DEFAULTS_CONFIG_FILE_NAME);
+        if (!Files.isDirectory(worldFolder)) {
+            return;
+        }
+        try (final var entries = Files.list(worldFolder)) {
+            for (final Path worldDirectory : entries.toList()) {
+                if (!Files.isDirectory(worldDirectory)) {
+                    continue;
+                }
+                migrateConfigFileIfNeeded(worldDirectory, LEGACY_WORLD_CONFIG_FILE_NAME, WORLD_CONFIG_FILE_NAME);
+            }
+        }
+    }
+
+    private static void migrateConfigFileIfNeeded(final Path directory, final String legacyFileName, final String newFileName) throws IOException {
+        final Path legacyFile = directory.resolve(legacyFileName);
+        final Path newFile = directory.resolve(newFileName);
+        if (Files.isRegularFile(legacyFile) && Files.notExists(newFile)) {
+            LOGGER.info("Migrating {} to {}", legacyFile, newFile);
+            Files.move(legacyFile, newFile);
+        }
     }
 
     // Symlinks are not correctly checked in createDirectories

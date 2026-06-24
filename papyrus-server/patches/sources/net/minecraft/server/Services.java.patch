@@ -33,8 +33,8 @@
 -        return new Services(sessionService, serviceAccess.getServicesKeySet(), profileRepository, profileCache, profileResolver);
 +        UserNameToIdResolver profileCache = new CachedUserNameToIdResolver(profileRepository, userCacheFile); // Paper
 +        // Paper start - load paper config files from cli options
-+        final java.nio.file.Path legacyConfigPath = ((File) options.valueOf("paper-settings")).toPath();
-+        final java.nio.file.Path configDirPath = ((File) options.valueOf("paper-settings-directory")).toPath();
++        final java.nio.file.Path legacyConfigPath = ((File) options.valueOf("papyrus-settings")).toPath();
++        final java.nio.file.Path configDirPath = ((File) options.valueOf("papyrus-settings-directory")).toPath();
 +        io.papermc.paper.configuration.PaperConfigurations paperConfigurations = io.papermc.paper.configuration.PaperConfigurations.setup(legacyConfigPath, configDirPath, nameCacheDir.toPath(), (File) options.valueOf("spigot-settings"));
 +        PaperServices paperServices = new PaperServices(
 +            paperConfigurations,

@@ -115,16 +115,16 @@ public class Main {
                         .defaultsTo(new File("spigot.yml"))
                         .describedAs("Yml file");
 
-                this.acceptsAll(asList("paper-dir", "paper-settings-directory"), "Directory for Paper settings")
+                this.acceptsAll(asList("papyrus-settings-directory", "papyrus-dir", "paper-settings-directory", "paper-dir"), "Directory for Papyrus settings")
                         .withRequiredArg()
                         .ofType(File.class)
                         .defaultsTo(new File(io.papermc.paper.configuration.PaperConfigurations.CONFIG_DIR))
                         .describedAs("Config directory");
 
-                this.acceptsAll(asList("paper", "paper-settings"), "File for Paper settings")
+                this.acceptsAll(asList("papyrus-settings", "papyrus", "paper-settings", "paper"), "File for Papyrus settings")
                         .withRequiredArg()
                         .ofType(File.class)
-                        .defaultsTo(new File("paper.yml"))
+                        .defaultsTo(new File("papyrus.yml"))
                         .describedAs("Yml file");
 
                 this.acceptsAll(asList("add-plugin", "add-extra-plugin-jar"), "Specify paths to extra plugin jars to be loaded in addition to those in the plugins folder. This argument can be specified multiple times, once for each extra plugin jar path.")

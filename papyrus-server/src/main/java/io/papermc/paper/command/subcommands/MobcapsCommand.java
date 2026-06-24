@@ -89,7 +89,7 @@ public final class MobcapsCommand implements PaperSubcommand {
             if (sender instanceof Player player) {
                 worlds = List.of(player.getWorld());
             } else {
-                sender.sendMessage(Component.text("Must specify a world! ex: '/paper mobcaps minecraft:overworld'", NamedTextColor.RED));
+                sender.sendMessage(Component.text("Must specify a world! ex: '/papyrus mobcaps minecraft:overworld'", NamedTextColor.RED));
                 return;
             }
         } else if (args.length == 1) {
@@ -146,7 +146,7 @@ public final class MobcapsCommand implements PaperSubcommand {
             if (sender instanceof Player pl) {
                 player = pl;
             } else {
-                sender.sendMessage(Component.text("Must specify a player! ex: '/paper playermobcount playerName'", NamedTextColor.RED));
+                sender.sendMessage(Component.text("Must specify a player! ex: '/papyrus playermobcount playerName'", NamedTextColor.RED));
                 return;
             }
         } else if (args.length == 1) {
@@ -165,7 +165,7 @@ public final class MobcapsCommand implements PaperSubcommand {
         final ServerLevel level = serverPlayer.level();
 
         if (!level.paperConfig().entities.spawning.perPlayerMobSpawns) {
-            sender.sendMessage(Component.text("Use '/paper mobcaps' for worlds where per-player mob spawning is disabled.", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Use '/papyrus mobcaps' for worlds where per-player mob spawning is disabled.", NamedTextColor.RED));
             return;
         }
 

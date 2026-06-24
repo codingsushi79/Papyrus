@@ -14,7 +14,7 @@ public final class VersionCommand implements PaperSubcommand {
     public boolean execute(final CommandSender sender, final String subCommand, final String[] args) {
         final @Nullable Command redirect = MinecraftServer.getServer().server.getCommandMap().getCommand("version");
         if (redirect != null) {
-            redirect.execute(sender, "paper", new String[0]);
+            redirect.execute(sender, "papyrus", new String[0]);
         }
         return true;
     }

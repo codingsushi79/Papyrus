@@ -112,7 +112,7 @@ public abstract class Configurations<G, W> {
             loader.save(node);
         } catch (ConfigurateException ex) {
             if (ex.getCause() instanceof AccessDeniedException) {
-                LOGGER.warn("Could not save {}: Paper could not persist the full set of configuration settings in the configuration file. Any setting missing from the configuration file will be set with its default value in memory. Admins should make sure to review the configuration documentation at https://docs.papermc.io/paper/configuration for more details.", filename, ex);
+                LOGGER.warn("Could not save {}: Papyrus could not persist the full set of configuration settings in the configuration file. Any setting missing from the configuration file will be set with its default value in memory. Admins should make sure to review the configuration documentation at https://docs.sushii.dev/papyrus/ for more details.", filename, ex);
             } else throw ex;
         }
     }

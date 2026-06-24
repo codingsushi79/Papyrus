@@ -111,7 +111,7 @@ public final class DumpListenersCommand implements PaperSubcommand {
 
     private void doDumpListeners(final CommandSender sender, final String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(text("Usage: /paper dumplisteners " + COMMAND_ARGUMENT_TO_FILE + "|<className>", RED));
+            sender.sendMessage(text("Usage: /papyrus dumplisteners " + COMMAND_ARGUMENT_TO_FILE + "|<className>", RED));
             return;
         }
 

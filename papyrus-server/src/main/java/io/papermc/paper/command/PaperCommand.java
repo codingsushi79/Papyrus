@@ -37,7 +37,10 @@ import static net.kyori.adventure.text.format.NamedTextColor.RED;
 
 @DefaultQualifier(NonNull.class)
 public final class PaperCommand extends Command {
-    static final String BASE_PERM = "bukkit.command.paper.";
+    static final String BASE_PERM = "bukkit.command.papyrus.";
+    static final String ROOT_PERM = "bukkit.command.papyrus";
+    static final String LEGACY_ROOT_PERM = "bukkit.command.paper";
+    static final String LEGACY_BASE_PERM = "bukkit.command.paper.";
     // subcommand label -> subcommand
     private static final Map<String, PaperSubcommand> SUBCOMMANDS = Util.make(() -> {
         final Map<Set<String>, PaperSubcommand> commands = new HashMap<>();
@@ -71,11 +74,16 @@ public final class PaperCommand extends Command {
 
     public PaperCommand(final String name) {
         super(name);
-        this.description = "Paper related commands";
-        this.usageMessage = "/paper [" + String.join(" | ", SUBCOMMANDS.keySet()) + "]";
+        this.description = "Papyrus related commands";
+        this.usageMessage = "/papyrus [" + String.join(" | ", SUBCOMMANDS.keySet()) + "]";
+        if ("papyrus".equals(name)) {
+            this.setAliases(List.of("paper"));
+        }
         final List<String> permissions = new ArrayList<>();
-        permissions.add("bukkit.command.paper");
+        permissions.add(ROOT_PERM);
+        permissions.add(LEGACY_ROOT_PERM);
         permissions.addAll(SUBCOMMANDS.keySet().stream().map(s -> BASE_PERM + s).toList());
+        permissions.addAll(SUBCOMMANDS.keySet().stream().map(s -> LEGACY_BASE_PERM + s).toList());
         this.setPermission(String.join(";", permissions));
         final PluginManager pluginManager = Bukkit.getServer().getPluginManager();
         for (final String perm : permissions) {
@@ -84,7 +92,7 @@ public final class PaperCommand extends Command {
     }
 
     private static boolean testPermission(final CommandSender sender, final String permission) {
-        if (sender.hasPermission(BASE_PERM + permission) || sender.hasPermission("bukkit.command.paper")) {
+        if (sender.hasPermission(BASE_PERM + permission) || sender.hasPermission(LEGACY_BASE_PERM + permission) || sender.hasPermission(ROOT_PERM) || sender.hasPermission(LEGACY_ROOT_PERM)) {
             return true;
         }
         sender.sendMessage(Bukkit.permissionMessage());

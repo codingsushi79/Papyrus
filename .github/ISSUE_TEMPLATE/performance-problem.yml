@@ -10,9 +10,9 @@ body:
       value: |
         Before submitting this issue, please ensure the following:
 
-        1. You are running the latest version of Paper from [our downloads page](https://papermc.io/downloads/paper).
-        2. You searched for and ensured there isn't already [an open issue](https://github.com/PaperMC/Paper/issues?q=is%3Aissue%20state%3Aopen%20type%3ABug) regarding this.
-        3. Your version of Minecraft is supported by Paper.
+        1. You are running the latest version of Papyrus from [GitHub Releases](https://github.com/codingsushi79/Papyrus/releases).
+        2. You searched for and ensured there isn't already [an open issue](https://github.com/codingsushi79/Papyrus/issues?q=is%3Aissue%20state%3Aopen%20type%3ABug) regarding this.
+        3. Your version of Minecraft is supported by Papyrus.
 
   - type: markdown
     attributes:
@@ -50,7 +50,7 @@ body:
   - type: textarea
     attributes:
       label: Server config files
-      description: We need bukkit.yml, spigot.yml, paper-global.yml, paper-world-defaults.yml and server.properties. If you use per-world Paper configs, make sure to include them. You can paste it below or use a paste site like https://mclo.gs.
+      description: We need bukkit.yml, spigot.yml, papyrus-global.yml, papyrus-world-defaults.yml and server.properties. If you use per-world Papyrus configs, make sure to include them. You can paste it below or use a paste site like https://mclo.gs.
       value: |
         ```
         Paste configs or mclo.gs link here!

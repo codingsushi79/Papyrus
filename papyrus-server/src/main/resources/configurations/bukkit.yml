@@ -1,13 +1,11 @@
-# This is the Bukkit configuration file in Paper.
+# This is the Bukkit configuration file in Papyrus.
 # As you can see, there's actually not that much to configure without any plugins.
 #
-# If you need help with the configuration or have any questions related to Paper,
-# join us in our Discord or check the docs page.
+# If you need help with the configuration or have any questions related to Papyrus,
+# see https://docs.sushii.dev/papyrus/ for documentation.
 #
 # File Reference: https://docs.papermc.io/paper/reference/bukkit-configuration/
-# Docs: https://docs.papermc.io/
-# Discord: https://discord.gg/papermc
-# Website: https://papermc.io/
+# Papyrus docs: https://docs.sushii.dev/papyrus/
 
 settings:
     allow-end: true

@@ -100,10 +100,10 @@ Accept the EULA by editing `eula.txt`, then start again. Papyrus generates confi
 
 ```
 config/
-  paper-global.yml          # Global server settings
-  paper-world-defaults.yml  # Defaults for all worlds
+  papyrus-global.yml          # Global server settings
+  papyrus-world-defaults.yml  # Defaults for all worlds
 world/
-  paper-world.yml           # Per-world overrides (optional)
+  papyrus-world.yml           # Per-world overrides (optional)
 spigot.yml                  # Spigot settings (activation ranges, etc.)
 bukkit.yml
 server.properties
@@ -168,14 +168,14 @@ Papyrus uses Paper's layered config system. Files are YAML; keys use kebab-case.
 
 | File | Scope |
 |------|-------|
-| `config/paper-global.yml` | Server-wide settings |
-| `config/paper-world-defaults.yml` | Defaults applied to every world |
-| `<world>/paper-world.yml` | Overrides for a specific world |
+| `config/papyrus-global.yml` | Server-wide settings |
+| `config/papyrus-world-defaults.yml` | Defaults applied to every world |
+| `<world>/papyrus-world.yml` | Overrides for a specific world |
 | `spigot.yml` | Entity activation/tracking ranges, hopper rates, Netty threads |
 | `bukkit.yml` | Spawn limits, chunk settings |
 | `server.properties` | Port, gamemode, difficulty, etc. |
 
-After editing configs, restart the server or use `/paper reload` where supported (some settings require a full restart).
+After editing configs, restart the server or use `/papyrus reload` where supported (some settings require a full restart).
 
 For Papyrus-specific options and presets, see [docs.sushii.dev/papyrus](https://docs.sushii.dev/papyrus/). For the full Paper config reference, see [docs.papermc.io](https://docs.papermc.io/paper/reference/configuration/). The sections below cover **Papyrus-specific** behavior and recommended values.
 
@@ -185,7 +185,7 @@ For Papyrus-specific options and presets, see [docs.sushii.dev/papyrus](https://
 
 ### Entity random source
 
-**File:** `config/paper-global.yml`
+**File:** `config/papyrus-global.yml`
 
 ```yaml
 performance:
@@ -201,7 +201,7 @@ performance:
 
 ### Experience orbs
 
-**File:** `config/paper-world-defaults.yml` or `<world>/paper-world.yml`
+**File:** `config/papyrus-world-defaults.yml` or `<world>/papyrus-world.yml`
 
 ```yaml
 environment:
@@ -221,7 +221,7 @@ Lower `experience-orb-pickup-radius` to reduce orb lag on grinder servers. Set `
 
 ### Redstone implementation
 
-**File:** `config/paper-world-defaults.yml` or `<world>/paper-world.yml`
+**File:** `config/papyrus-world-defaults.yml` or `<world>/papyrus-world.yml`
 
 ```yaml
 misc:
@@ -239,7 +239,7 @@ Default is `VANILLA`. Switch to `EIGENCRAFT` or `ALTERNATE_CURRENT` only on reds
 
 ### Chunk system I/O threads
 
-**File:** `config/paper-global.yml`
+**File:** `config/papyrus-global.yml`
 
 ```yaml
 chunk-system:
@@ -253,7 +253,7 @@ Papyrus auto-scales I/O threads to `min(4, max(1, cpu_cores / 4))` when set to `
 
 ## Integrated anticheat
 
-Papyrus ships a built-in anticheat engine under `config/paper-global.yml`. It runs at packet level (before actions apply) and does not require a plugin. Disable external anticheat plugins if you use this to avoid duplicate kicks.
+Papyrus ships a built-in anticheat engine under `config/papyrus-global.yml`. It runs at packet level (before actions apply) and does not require a plugin. Disable external anticheat plugins if you use this to avoid duplicate kicks.
 
 ```yaml
 anticheat:
@@ -315,7 +315,7 @@ Item component obfuscation (`anticheat.obfuscation`) and per-world Anti-Xray (`a
 
 These defaults apply to **new** config files. Existing servers keep their saved values until you change them manually.
 
-#### Global (`config/paper-global.yml`)
+#### Global (`config/papyrus-global.yml`)
 
 | Key | Papyrus default | Effect |
 |-----|-----------------|--------|
@@ -327,7 +327,7 @@ These defaults apply to **new** config files. Existing servers keep their saved 
 | `misc.region-file-cache-size` | `512` | Larger region file cache (uses more RAM) |
 | `update-checker.enabled` | `false` | No PaperMC update checks |
 
-#### World (`config/paper-world-defaults.yml`)
+#### World (`config/papyrus-world-defaults.yml`)
 
 | Key | Papyrus default | Effect |
 |-----|-----------------|--------|
@@ -378,11 +378,11 @@ Tracking controls network packets; activation controls server-side AI ticks. Low
 Use this when vanilla behavior matters more than peak performance (speedrunning, strict survival, enchantment seed work):
 
 ```yaml
-# config/paper-global.yml
+# config/papyrus-global.yml
 performance:
   entity-random-source: VANILLA
 
-# config/paper-world-defaults.yml
+# config/papyrus-world-defaults.yml
 misc:
   redstone-implementation: VANILLA
   update-pathfinding-on-block-update: true   # restore Paper-like mob repathing
@@ -609,13 +609,13 @@ Papyrus inherits licensing from Paper, Spigot, and CraftBukkit. See [LICENSE.md]
 Yes. Same API package (`io.papermc.paper`), same Maven artifact (`io.papermc.paper:paper-api`), same config file names, same `paper-plugin.yml` format. Gradle modules are named `:paper-api` / `:paper-server` but live in `papyrus-*` directories. Use `ServerBuildInfo.BRAND_PAPYRUS_ID` only if you need Papyrus-specific behavior.
 
 **What's the difference between `performance.netty-threads` and `spigot.yml` Netty settings?**  
-`performance.netty-threads` in `paper-global.yml` sets `io.netty.eventLoopThreads` when `spigot.yml` does not override Netty thread count. Set either one, not both, unless you know you need different values.
+`performance.netty-threads` in `papyrus-global.yml` sets `io.netty.eventLoopThreads` when `spigot.yml` does not override Netty thread count. Set either one, not both, unless you know you need different values.
 
 **Will my existing Paper config work?**  
 Yes. Drop in your existing `config/`, `spigot.yml`, and worlds. Papyrus-specific defaults only apply to keys that aren't already set.
 
 **How do I restore enchantment seed manipulation?**  
-Set `performance.entity-random-source: VANILLA` in `config/paper-global.yml` and restart.
+Set `performance.entity-random-source: VANILLA` in `config/papyrus-global.yml` and restart.
 
 **How do I get vanilla redstone behavior?**  
 Set `misc.redstone-implementation: VANILLA` in your world config. This is already the default.
@@ -624,7 +624,7 @@ Set `misc.redstone-implementation: VANILLA` in your world config. This is alread
 The bootstrap tool (`paperclip`) comes from upstream Paper. Papyrus copies the build output to `papyrus-paperclip-*.jar`.
 
 **Can I use GrimAC or another anticheat plugin alongside Papyrus?**  
-You can, but Papyrus includes a built-in engine (`anticheat.engine` in `paper-global.yml`). Running both may cause duplicate flags — disable one or set `anticheat.engine.enabled: false` if you prefer an external plugin.
+You can, but Papyrus includes a built-in engine (`anticheat.engine` in `papyrus-global.yml`). Running both may cause duplicate flags — disable one or set `anticheat.engine.enabled: false` if you prefer an external plugin.
 
 **Where do I report bugs?**  
 Open an issue at [github.com/codingsushi79/Papyrus/issues](https://github.com/codingsushi79/Papyrus/issues). Specify whether the bug exists in upstream Paper or is Papyrus-specific.

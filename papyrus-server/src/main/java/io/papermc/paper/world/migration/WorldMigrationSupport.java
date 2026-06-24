@@ -28,7 +28,8 @@ import org.slf4j.Logger;
 final class WorldMigrationSupport {
     private static final Logger LOGGER = LogUtils.getClassLogger();
     static final List<String> DIMENSION_DIRECTORIES = List.of("region", "entities", "poi");
-    static final String PAPER_WORLD_CONFIG = "paper-world.yml";
+    static final String PAPER_WORLD_CONFIG = "papyrus-world.yml";
+    private static final String LEGACY_PAPER_WORLD_CONFIG = "paper-world.yml";
     static final String LEGACY_UID_FILE_NAME = "uid.dat";
 
     private WorldMigrationSupport() {
@@ -68,8 +69,8 @@ final class WorldMigrationSupport {
     }
 
     static void migratePaperWorldConfig(final Path sourceRoot, final Path targetDimensionPath) throws IOException {
-        final Path source = sourceRoot.resolve(PAPER_WORLD_CONFIG);
-        if (!Files.isRegularFile(source)) {
+        final Path source = firstExistingWorldConfig(sourceRoot);
+        if (source == null) {
             return;
         }
 
@@ -79,8 +80,20 @@ final class WorldMigrationSupport {
         }
 
         Files.createDirectories(target.getParent());
-        LOGGER.info("Migrating Paper world config from {} to {}", source, target);
+        LOGGER.info("Migrating Papyrus world config from {} to {}", source, target);
         Files.move(source, target);
+    }
+
+    private static @Nullable Path firstExistingWorldConfig(final Path sourceRoot) {
+        final Path papyrusConfig = sourceRoot.resolve(PAPER_WORLD_CONFIG);
+        if (Files.isRegularFile(papyrusConfig)) {
+            return papyrusConfig;
+        }
+        final Path legacyConfig = sourceRoot.resolve(LEGACY_PAPER_WORLD_CONFIG);
+        if (Files.isRegularFile(legacyConfig)) {
+            return legacyConfig;
+        }
+        return null;
     }
 
     static void migrateDimensionDirectories(final Path sourceDimensionRoot, final Path targetDimensionPath) throws IOException {
